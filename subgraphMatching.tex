@@ -1,0 +1,83 @@
+\documentclass[sigconf, nonacm]{acmart}
+\input{preamble}
+
+
+\begin{document}
+
+\title{Efficient Subgraph Matching on GPUs with Double-Vertex Extension}
+\author{Gangzhao Lu}
+\affiliation{
+	\institution{Harbin Institute of Technology}
+	\city{Harbin}
+	\state{China}
+	\postcode{150001}
+}
+\email{lugangzhao@hit.edu.cn}
+
+\author{Weizhe Zhang}
+\affiliation{
+	\institution{Harbin Institute of Technology}
+	\city{Harbin}
+	\state{China}
+	\postcode{150001}
+}
+\email{wzzhang@hit.edu.cn}
+
+\author{Xiao Sun}
+\affiliation{
+	\institution{Harbin Institute of Technology}
+	\city{Harbin}
+	\state{China}
+	\postcode{150000}
+}
+\email{xiaosun@stu.hit.edu.cn}
+
+\author{Zheng Wang}
+\affiliation{
+	\institution{University of Leeds}
+	\city{Leeds}
+	\state{United Kingdom}
+	\postcode{LS29JT}
+}
+\email{z.wang5@leeds.ac.uk}
+
+\input{sections/abstract}
+\maketitle
+%%% do not modify the following VLDB block %%
+%%% VLDB block start %%%
+\pagestyle{\vldbpagestyle}
+\begingroup\small\noindent\raggedright\textbf{PVLDB Reference Format:}\\
+\vldbauthors. \vldbtitle. PVLDB, \vldbvolume(\vldbissue): \vldbpages, \vldbyear.\\
+\href{https://doi.org/\vldbdoi}{doi:\vldbdoi}
+\endgroup
+\begingroup
+\renewcommand\thefootnote{}\footnote{\noindent
+This work is licensed under the Creative Commons BY-NC-ND 4.0 International License. Visit \url{https://creativecommons.org/licenses/by-nc-nd/4.0/} to view a copy of this license. For any use beyond those covered by this license, obtain permission by emailing \href{mailto:info@vldb.org}{info@vldb.org}. Copyright is held by the owner/author(s). Publication rights licensed to the VLDB Endowment. \\
+\raggedright Proceedings of the VLDB Endowment, Vol. \vldbvolume, No. \vldbissue\ %
+ISSN 2150-8097. \\
+\href{https://doi.org/\vldbdoi}{doi:\vldbdoi} \\
+}\addtocounter{footnote}{-1}\endgroup
+%%% VLDB block end %%%
+
+%%% do not modify the following VLDB block %%
+%%% VLDB block start %%%
+\ifdefempty{\vldbavailabilityurl}{}{
+\vspace{.3cm}
+\begingroup\small\noindent\raggedright\textbf{PVLDB Artifact Availability:}\\
+The source code, data, and/or other artifacts have been made available at \url{\vldbavailabilityurl}.
+\endgroup
+}
+%%% VLDB block end %%%
+
+
+\input{sections/intro}
+\input{sections/background}
+\input{sections/relatedwork}
+\input{sections/approach}
+\input{sections/eval}
+\input{sections/conclusions}
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{refs}
+\end{document}
+\endinput

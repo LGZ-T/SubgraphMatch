@@ -1,6 +1,6 @@
 \section{Background}
 \subsection{Definitions}
-In this work, we focus on mining subgraphs on an undirected labeled data graph $G=\{V,E,\Sigma,L_V,L_E\}$, where $V$ is a set of vertices, $E$ is a set of edges, $\Sigma$ is a set of labels, $L_V$ is a function that associates a vertex $v \in V$ with a label $L_V \in \Sigma$, and $L_E$ is a function that associates an edge $e \in E$ with a label $L_E \in \Sigma$.
+In this work, we focus on mining subgraphs on an labeled data graph $G=\{V,E,\Sigma,L_V,L_E\}$, where $V$ is a set of vertices, $E$ is a set of edges, $\Sigma$ is a set of labels, $L_V$ is a function that associates a vertex $v \in V$ with a label $L_V \in \Sigma$, and $L_E$ is a function that associates an edge $e \in E$ with a label $L_E \in \Sigma$.
 
 \noindent
 \textbf{Definition 1 \emph{(Subgraph Matching)}} A graph $g=\{V_g,E_g,\Sigma_g,L_{V_g},L_{E_g}\}$ is isomorphic to a query graph $q=\{V_q,E_q,\Sigma_q,L_{V_q},L_{E_q}\}$, if and only if there exists a bijective function $f: V_q \rightarrow V_g$ such that (1) $\forall u \in V_q$, $f(u) \in V_g$ and $L_{V_q}(u) = L_{V_g}(f(u))$; and (2) $\forall e_q=(u,u') \in E_q$, $e_g=(f(u),f(u')) \in E_g$ and $L_{E_q}(e_q)=L_{E_g}(e_g)$. Subgraph matching is to find all subgraphs (called embeddings) of a data graph $G$ that are isomorphic to a query graph $q$.

@@ -213,17 +213,20 @@ Load interval indexes of $elp$ into shared memory\;
 
 
 \subsection{Matching Order}
-\RV{In this section, we first give a brief description of matching order generation method used in \cite{bi2016efficient}, and then demonstrate the details of our matching order generation algorithm based on NV-ext method.}
-
-Many previous researches \cite{bi2016efficient,sun2020subgraph,sun2020rapidmatch,guo2020gpu} have explored how to generate an effective matching order to speed up the matching process. However, all of these methods are designed for single-vertex extension subgraph matching and not suitable for our DV-ext method. In this work, we propose a matching order generation algorithm based on the structural information of the query graph. The key idea of our algorithm is to match all available backward edges in the query graph as soon as possible to eliminate invalid partial embeddings at early stages. If no backward edges are available, we extend the partial query graph by one or two vertices. Algorithm \ref{algo:genmatchorder} demonstrates our matching order generation algorithm.
-%When extending an edge that connects two matched query vertices, we can add a restriction on two matched query vertices, which is that the neighbors of one vertex must contain the other vertex. Thus, we can guarantee that the number of generated embeddings is less than or equal to the number of previous embeddings. Based on this observation,
-
 \begin{figure}
 \centering
 \includegraphics[width=\columnwidth]{./figure/genmatchorder.eps}
-\caption{An illustration of how to decompose a query graph into a core structure and trees.}	
+\caption{An illustration of how to decompose a query graph into a core structure and trees.}
 \label{fig:matchorder}
 \end{figure}
+\RV{In this section, we first give a brief description of matching order generation method used in \cite{bi2016efficient}, and then demonstrate the details of our matching order generation algorithm based on NV-ext method.}
+
+\RV{The main goal of \cite{bi2016efficient} is to match backward edges as soon as possible to eliminate invalid embeddings at early stages. Therefore, they generate a subgraph of $q$ that contains all backward edges regarding any spanning tree of $q$ by iteratively removing all degree-one vertices from $q$. The generated subgraph is called the core structure, as shown in Figure \ref{fig:matchorder}}.
+
+%Many previous researches \cite{bi2016efficient,sun2020subgraph,sun2020rapidmatch,guo2020gpu} have explored how to generate an effective matching order to speed up the matching process. However, all of these methods are designed for single-vertex extension subgraph matching and not suitable for our DV-ext method. In this work, we propose a matching order generation algorithm based on the structural information of the query graph. The key idea of our algorithm is to match all available backward edges in the query graph as soon as possible to eliminate invalid partial embeddings at early stages. If no backward edges are available, we extend the partial query graph by one or two vertices. Algorithm \ref{algo:genmatchorder} demonstrates our matching order generation algorithm.
+%When extending an edge that connects two matched query vertices, we can add a restriction on two matched query vertices, which is that the neighbors of one vertex must contain the other vertex. Thus, we can guarantee that the number of generated embeddings is less than or equal to the number of previous embeddings. Based on this observation,
+
+
 
 At the beginning of Algorithm \ref{algo:genmatchorder}, we adopt methods proposed in \cite{shi2020graphpi,mawhirter2019graphzero} to generate restrictions on VIDs in partial embeddings (line 1). Thus, we can avoid generating invalid partial embeddings. The initial query phase is slightly different from the normal extension phase. In the initial phase, we match up to three query vertices in one GPU kernel, thus restricting the type of the initial phase to extension patterns 1 and 3 which have only one source vertex (lines 2-4). Different from the normal extension phase that fetches source vertices from partial embeddings, the initial phase fetches the source vertex from the edge label partition. Except for the differences, the initial phase uses the same method as the extension phase to generate partial embeddings based on the extension pattern. If no extension patterns are available for the initial phase, we choose the SV-phase that has the most neighbors (lines 5-8).
 

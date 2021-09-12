@@ -223,14 +223,19 @@ Load interval indexes of $elp$ into shared memory\;
 
 \RV{The main goal of \cite{bi2016efficient} is to match backward edges as soon as possible to eliminate invalid embeddings at early stages. Therefore, they generate a subgraph of $q$ that contains all backward edges regarding any spanning tree of $q$ by iteratively removing all degree-one vertices from $q$. The generated subgraph, which is called the core structure as shown in Figure \ref{fig:matchorder}, is matched first. In our approach, we also match the core structure first, and then the trees}.
 
-\RV{When decomposing the core structure into extension and elimination phases, we need to adhere to an important constraint, which is that only extension patterns 0-4 can be used to decompose the core structure. The reason is explained as follows.}
+\RV{When decomposing the core structure into extension and elimination phases, we need to adhere to an important constraint, which is that only extension patterns 0-4 can be used to decompose the core structure. The reason is explained as follows. In order to eliminate invalid embeddings as soon as possible, we need to first match circles in the core structure, which are \{$u_0$, $u_1$, $u_2$\} and \{$u_2$, $u_3$, $u_4$, $u_5$\} in Figure \ref{fig:matchorder}. Therefore, we need to extend at most two vertices when matching a circle because vertices have exactly two neighbors in a circle.}
+
+\RV{For the core structure in Figure \ref{fig:matchorder}, we first use extension pattern 1 to match $u_0$, $u_1$, and $u_2$, then match the backward edge $(u_0, u_1)$. If we first match $u_0$, $u_1$, $u_2$, $u_4$, and $u_5$ with extension pattern 5, and then the backward edge $(u_0, u_1)$, a large number of invalid embeddings may be generated after matching the extension pattern 5, which significantly slows down the matching performance. After matching the core structure, we can use any appropriate extension patters to match trees. For example, extension patterns 5 and 1 can be used to match $T_1$ and $T_2$ in Figure \ref{fig:matchorder} respectively.}
 
 %Many previous researches \cite{bi2016efficient,sun2020subgraph,sun2020rapidmatch,guo2020gpu} have explored how to generate an effective matching order to speed up the matching process. However, all of these methods are designed for single-vertex extension subgraph matching and not suitable for our DV-ext method. In this work, we propose a matching order generation algorithm based on the structural information of the query graph. The key idea of our algorithm is to match all available backward edges in the query graph as soon as possible to eliminate invalid partial embeddings at early stages. If no backward edges are available, we extend the partial query graph by one or two vertices. Algorithm \ref{algo:genmatchorder} demonstrates our matching order generation algorithm.
 %When extending an edge that connects two matched query vertices, we can add a restriction on two matched query vertices, which is that the neighbors of one vertex must contain the other vertex. Thus, we can guarantee that the number of generated embeddings is less than or equal to the number of previous embeddings. Based on this observation,
 
 
+\RV{Based on \cite{bi2016efficient} and our NV-ext method, we design Algorithm \ref{algo:genmatchorder} to generate matching order of query phases.} At the beginning of Algorithm \ref{algo:genmatchorder}, we adopt methods proposed in \cite{shi2020graphpi,mawhirter2019graphzero} to generate restrictions on VIDs in partial embeddings (line 1). Thus, we can avoid generating invalid partial embeddings. Then we generate the core structure $C$ of $q$ by iteratively removing degree-one vertices from $q$, and construct trees $T$ of $q$ using removed vertices (line 2).
 
-At the beginning of Algorithm \ref{algo:genmatchorder}, we adopt methods proposed in \cite{shi2020graphpi,mawhirter2019graphzero} to generate restrictions on VIDs in partial embeddings (line 1). Thus, we can avoid generating invalid partial embeddings. The initial query phase is slightly different from the normal extension phase. In the initial phase, we match up to three query vertices in one GPU kernel, thus restricting the type of the initial phase to extension patterns 1 and 3 which have only one source vertex (lines 2-4). Different from the normal extension phase that fetches source vertices from partial embeddings, the initial phase fetches the source vertex from the edge label partition. Except for the differences, the initial phase uses the same method as the extension phase to generate partial embeddings based on the extension pattern. If no extension patterns are available for the initial phase, we choose the SV-phase that has the most neighbors (lines 5-8).
+In order to match the core structure (line 3), we first find the smallest circle in core structure.
+
+The initial query phase is slightly different from the normal extension phase. In the initial phase, we match up to three query vertices in one GPU kernel, thus restricting the type of the initial phase to extension patterns 1 and 3 which have only one source vertex (lines 2-4). Different from the normal extension phase that fetches source vertices from partial embeddings, the initial phase fetches the source vertex from the edge label partition. Except for the differences, the initial phase uses the same method as the extension phase to generate partial embeddings based on the extension pattern. If no extension patterns are available for the initial phase, we choose the SV-phase that has the most neighbors (lines 5-8).
 
 After generating the initial phase, we iteratively construct query phases for the rest vertices and edges in $q$ (line 10). First, we find all backward edges (line 11) and group them by the edge label (line 12). For each group, we construct an elimination phase (lines 13-15). If no backward edges are found, we search for two unmatched query vertices that can form one of extension patterns 1-4 (line 16). Since more than one extension patterns may be found, we assign each extension pattern a priority and choose the extension pattern with the highest priority.
 \begin{itemize}
@@ -248,17 +253,19 @@ After generating the initial phase, we iteratively construct query phases for th
 	\KwIn{the query graph $q$}
 	\KwOut{the match phase queue $matchPhase$}
 	Generate restrictions to eliminate automorphisms\;
-	\If{there exists EP 1 or EP 3 in $q$}{
-		Construct an initial phase $initPhase$ with the founded EP\;
-		$matchPhase.append(initPhase)$\;
-	}
-	\Else{
-		Find a pair of connected vertices that have the most neighbors in $q$\;
-		Construct an initial phase $initPhase$ with the founded pair\;
-		$matchPhase.append(initPhase)$\;
-	}
-	Delete added vertices from $q$\;
-	\While{$q \neq \emptyset$}{
+	Generate the core structure $C$ and trees $T$ of $q$\;
+	Find the smallest circle $minc$ in $C$\;
+%	\If{there exists EP 1 or EP 3 in $q$}{
+%		Construct an initial phase $initPhase$ with the founded EP\;
+%		$matchPhase.append(initPhase)$\;
+%	}
+%	\Else{
+%		Find a pair of connected vertices that have the most neighbors in $q$\;
+%		Construct an initial phase $initPhase$ with the founded pair\;
+%		$matchPhase.append(initPhase)$\;
+%	}
+%	Delete added vertices from $q$\;
+	\While{$C \neq \emptyset$}{
 		\If{there are backward edges}{
 			Group all backward edges by the edge label, denoted as $G$\;
 			\ForEach{$g \in G$}{

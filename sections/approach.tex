@@ -190,7 +190,7 @@ To speed up the matching process of extension pattern 1, we rearrange the genera
 	\label{algo:optDV}
 \end{algorithm}
 
-Methods of generating partial embeddings for extension patterns 5-7 are illustrated in the following: (1) 
+Methods of generating partial embeddings for extension patterns 5-7 are illustrated in the following: (1) Extension pattern 5 is derived from extension pattern 1, thus we put $n-2$-nested loops outside the 2-nested loops of Algorithm \ref{algo:optDV} to generate embeddings for extension pattern 5. Specifically, we use $n$-nested loops.
 
 \subsection{Elimination Phase} \label{sec:eliphase}
 GSI \cite{zeng2020gsi} matches only one query edge in a GPU kernel and Lai et al. \cite{lai2015scalable} matches at most two query edges at each iteration. Both methods can not fully utilize the elimination power of backward edges. In our approach, we match as many backward edges as possible to eliminate invalid partial embeddings at early stages. Algorithm \ref{algo:eliphase} demonstrates how our approach deals with the eliminate phase. For each partial embedding $emb$ (line 2), we first check if all query edges in the elimination phase can be matched in $emb$ (line 4). If so (line 5), we write $emb$ to the shared memory $tmp$ (line 6) and write $tmp$ to global memory if it is full (lines 7-9).

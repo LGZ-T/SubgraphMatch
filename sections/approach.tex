@@ -102,22 +102,25 @@ The main problem of subgraph matching on GPU is that the number of partial embed
 Algorithm \ref{algo:extphase} describes the overall workflow of generating embeddings for extension patterns 0-4. For each partial embedding (line 3), we first get source VIDs from the partial embedding according to the extension phase (line 4). Then, we search source VIDs in interval indexes and extract their neighbors (line 5).  Next, we remove invalid neighbors that have wrong vertex labels and do not satisfy restrictions. Finally, we use different algorithms to generate new embeddings for different extension patterns (lines 8-13).
 
 \begin{algorithm}
-\KwIn{the edge label partition $elp$, partial embeddings $EMB$, the starting address of new embeddings $newEMB$, the extension phase $extPhase$}
-$count \leftarrow 0$\;
+\KwIn{the edge label partition $elp$, partial embeddings $EMB$, the starting address of new embeddings $newEMB$, the extension phase $extP$}
+$totNum \leftarrow 0$\;
 Load interval indexes of $elp$ into shared memory\;
 \ForEach{$emb \in EMB$}{
 	Get source VIDs $u_{s1}$ and $u_{s2}$ from $emb$\;
 	Search $u_{s1}$ and $u_{s2}$ in interval indexes and extract their neighbors $ne1$ and $ne2$, respectively.\;
 	Remove neighbors that do not have the same vertex labels as $u_{1}$ and $u_{2}$ from $ne1$ and $ne2$, respectively\;
 	Remove neighbors that do not satisfy the restrictions of $u_{1}$ and $u_{2}$ from $ne1$ and $ne2$, respectively\;
-	\If{$extPhase$ is extension pattern 1}{
-		$\textsc{OptDouExt}(emb,ne1,count,newEMB)$\;
+	\If{$extP$ is extension pattern 0}{
+		We use the traditional SV-ext method to generate embeddings for $extP$\;
 	}
-	\ElseIf{$extPhase$ is one of extension patterns 2, 3, and 4}{
-		$\textsc{DouExt}(emb,ne1,ne2,count,newEMB)$\;
+	\ElseIf{$extP$ is extension pattern 1}{
+		$\textsc{OptDouExt}(emb,ne1,totNum,newEMB)$\;
 	}
-	\Else{
-		We use the traditional SV-ext method to generate embeddings for $extPhase$\;
+	\ElseIf{$extP$ is one of extension patterns 2, 3, and 4}{
+		$\textsc{DouExt}(emb,ne1,ne2,totNum,newEMB)$\;
+	}
+	\ElseIf{$extP$ is one of extension patterns 5, 6, and 7}{
+		$\textsc{NExt}(emb,ne1,ne2,totNum,newEMB)$\;
 	}
 }
 
@@ -188,6 +191,27 @@ To speed up the matching process of extension pattern 1, we rearrange the genera
 	}
 	\caption{\textsc{OptDouExt}}
 	\label{algo:optDV}
+\end{algorithm}
+
+\begin{algorithm}
+	\KwIn{the partial embedding $emb$, candidates of \{$u_1, \cdots, u_n$\} $C_1$, candidates of \{$u_{n+1}, \cdots, u_{n+m}$\} $C_2$, the number of newly written embeddings $totNum$, the starting address of new embeddings $newEMB$, extension pattern $extP$}
+	Construct the set $combSet$ of combinations of $u_1, \cdots, u_{n-2}$, where $u_1, \cdots, u_{n-2} \in C_1$\;
+	\If{$extP$ is extension pattern 5}{
+		\ForEach{$comb \in combSet$}{
+			Add $comb$ to $emb$\;
+			Copy vertices in $C_1/comb$ to $C_{copy}$\;
+			$\textsc{OptDouExt}(emb,C_{copy},totNum,newEMB)$\;
+		}
+	}
+	\ElseIf{$extP$ is one of extension patterns 6 and 7}{
+		\ForEach{combination $comb1$ of $u_1, \cdots, u_n$}{
+			\ForEach{combination of $u_{n+1}, \cdots, u_{n+m-2}$}{
+				
+			}
+		}
+	}
+	\caption{\textsc{NExt}}
+	\label{algo:nvext}
 \end{algorithm}
 
 Methods of generating partial embeddings for extension patterns 5-7 are illustrated in the following: (1) Extension pattern 5 is derived from extension pattern 1, thus we put $n-2$-nested loops outside the 2-nested loops of Algorithm \ref{algo:optDV} to generate embeddings for extension pattern 5. Specifically, we use $n$-nested loops.

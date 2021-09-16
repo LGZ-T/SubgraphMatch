@@ -53,8 +53,19 @@ $EMB \leftarrow newEMB$\;
 \end{figure*}
 
 We first briefly describe the state-of-the-art data graph format for labeled graphs on GPU, hash-PCSR which is proposed by GSI \cite{zeng2020gsi}. Then, we give a detailed illustration of our data graph format, interval-PCSR, which is more space and time efficient than hash-PCSR.
-\subsubsection{hash-PCSR}
-hash-PCSR groups edges of the same edge label into one edge label partition and builds the GPU-based CSR format for each edge label partition. Thus, only the partition that has the same edge label as the matching edge needs to be transferred to GPU memory, which significantly reduces the GPU memory consumption. In the traditional CSR format (Figure \ref{fig:dataformat}(a)), a VID can be used as the index to find the row offset of this vertex because VIDs in CSR are contiguous. However, VIDs may not be contiguous in an edge label partition (Figure \ref{fig:dataformat}(b)), and hence can not be used as the index. To overcome this problem, hash-PCSR designs a hash function to generate an index for each vertex based on its VID (Figure \ref{fig:dataformat}(c), this is a simplified hash-PCSR format, the detailed format is in \cite{zeng2020gsi}). To reduce collisions of the hash function, hash-PCSR uses 30 empty entries for each vertex and results in a large portion of unused GPU memory space.
+\subsubsection{PCSR}
+Real-world graphs are too large to fit into the GPU memory. As a result, the currently needed graph data should be stored in the GPU memory
+at a given time. To this end, \SystemName extends the Partitioned Compressed Sparse Row (PCSR), the data graph storage format used by GSI
+\cite{zeng2020gsi}. This format groups edge with the same label into an edge partition, which is then stored in the Compressed Sparse Row
+(CSR) sparse matrix storage format \FIXME{\cite{}}. By doing so, only the partition with the same edge label as the matching edge needs to
+be moved from the CPU memory into the GPU memory. PCSR makes some small modifications to the CSR format. As depicted in Figure
+\ref{fig:dataformat}a, a VID can be used to find the row offset of a vertex becauseVIDs are stored as contiguous elements in a classical
+CSR. Because after grouping edges into partitions, VIDs of vertices are no longer guaranteed to be continuous in the storage space (Figure
+\ref{fig:dataformat}b), GSI employs a hash function to translate a VID into a slot the corresponding elements in the edge partition
+structure. To reduce collisions of the hash function, DSI allows 30 empty entries for each vertex, which results in a large portion of
+unused GPU memory space.
+
+
 \subsubsection{Our interval-PCSR}
 \begin{algorithm}[t!]
 \KwIn{the set of all edge label partitions $ELP$}

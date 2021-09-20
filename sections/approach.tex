@@ -1,28 +1,46 @@
 \section{Overview of Our Approach}
 %In this section, we give a detailed description of our approach, which targets on utilizing GPU to match query graphs on labeled undirected graphs.
 %\subsection{Overview}
-Figure~\ref{} depicts the overall workflow of our approach. We first convert the input query graph into a storage format to be used by our
-method. This storage format is designed to improve space efficiency and reduce the GPU memory access latency. We note that this conversion
-only needs to be performed once. To perform subgraph matching on the GPU, we first decompose the query graph into multiple query phases
-based on its vertex and edge labels. Next, we generate a matching order for the query phases, which satisfies the constraints of the query
-vertices. Examples of such constraints include \FIXME{xx, xx and xx}.
+%Figure~\ref{} depicts the overall workflow of our approach. We first convert the input query graph into a storage format to be used by our
+%method. This storage format is designed to improve space efficiency and reduce the GPU memory access latency. We note that this conversion
+%only needs to be performed once. To perform subgraph matching on the GPU, we first decompose the query graph into multiple query phases
+%based on its vertex and edge labels. Next, we generate a matching order for the query phases, which satisfies the constraints of the query
+%vertices. Examples of such constraints include \FIXME{xx, xx and xx}.
+
+Figure~\ref{} depicts the overall workflow of our approach. At the offline stage, we convert the data graph into a carefully designed
+storage format. This format is designed to accelerate GPU kernel computation while reducing the GPU memory footprint when processing large
+graphs (Section \ref{sec:storage}). We note that this storage conversion only needs to be performed once, which is a one-off cost performed
+offline.
+
+During runtime, we first convert the input query graph into our storage format. We then decompose the query graph into two query phases
+based on its vertex and edge labels. In the first extension phase (Section \ref {sec:extensionphase}), we extend one or two vertices
+denoted as SV and DV phases respectively, as shown in Figure \ref{fig:extpattern}. In the second elimination phase (Section \ref
+{sec:eliphase}), we \FIXME{explain the elimination phase}). Finally, we generate  Next, we generate a matching order for the query phases,
+which satisfies the constraints of the query vertices (i.e., matching order). This stage is detailed in  Section \ref {sec:matchingorder}.
 
 
-Before the matching process, we first convert the data graph into our specific format that is space efficient and query friendly. Note that
-the conversion only needs to do once. Then, we perform subgraph matching on GPU, as shown in Algorithm \ref{algo:submatch}. We first
-decompose the query graph into query phases based on its vertex and edge labels. In the meanwhile, we generate a matching order for query
-phases and restrictions on query vertices (line 1). All edges extended in a query phase have the same edge label since we load one edge
-label partition at each iteration (lines 2, 7). There are two types of query phases, \emph{extension phase} and \emph{elimination phase}.
-The extension phase contains one or two vertices for extension (line 9), denoted as SV-phase and DV-phase respectively, as shown in Figure
-\ref{fig:extpattern}. The elimination phase contains multiple backward edges for elimination (line 11). The first query phase of the
-matching order is used to generate initial embeddings. We use the same GPU kernel as the extension phase to generate initial embeddings
-(line 4). The main difference between the first query phase and the extension phase is that the source VIDs of the former one are from the
-edge label partition, while the later one are from previous embeddings. Finally, we use different GPU kernels to match different types of
-query phases (lines 10, 12), and output the final embeddings (line 13). In the following sections, we elaborate each step in detail.
+Algorithm \ref{algo:submatch} shows our GPU-tuned subgraph matching algorithm. With our storage format, we are able to load edges with the
+same label at once as we iterate over the input graph  (lines 2, 7). We use the extension phase kernel to generate the intial graph
+embeddings (line 4). We then move to process the extension and elimination phases GPU kernels (lines 9 and 11, respectively). In the later
+extension phase, we update the embeddings using the previously generated graph embedding. At the end of the iteration, we output the final
+graph embeddings (line 13).
 
 
 
-\section{Data Graph Storage Format}
+
+%Algorithm \ref{algo:submatch} shows our GPU-tuned subgraph matching algorithm. We first     decompose the query graph into query phases
+%based on its vertex and edge labels.  All edges extended in the query phase have the same edge label since we load one edge
+%label partition at each iteration (lines 2, 7). There are two types of query phases, \emph{extension phase} and \emph{elimination phase}.
+%The extension phase contains one or two vertices for extension (line 9), denoted as SV-phase and DV-phase respectively, as shown in Figure
+%\ref{fig:extpattern}. The elimination phase contains multiple backward edges for elimination (line 11). The first query phase of the
+%matching order is used to generate initial embeddings. We use the same GPU kernel as the extension phase to generate initial embeddings
+%(line 4). The main difference between the first query phase and the extension phase is that the source VIDs of the former one are from the
+%edge label partition, while the later one are from previous embeddings. Finally, we use different GPU kernels to match different types of
+%query phases (lines 10, 12), and output the final embeddings (line 13). In the following sections, we elaborate each step in detail.
+
+
+
+\section{Data Graph Storage Format\label{sec:storage}}
 \begin{figure*}
 \centering
 \includegraphics[width=\textwidth]{./figure/graphformat.eps}
@@ -169,7 +187,7 @@ process stops until all VIDs have been renamed and recored in the interval indic
 Figure \ref{} shows the storage size of \SystemName against the PCSR scheme used by GSI for a \FIXME{xx} graph. The \SystemName storage
 format reduces the storage size (and the GPU memory footprint) by \FIXME{xx\%}.
 
-\section{The Extension Phase}
+\section{The Extension Phase\label{sec:extensionphase}}
 \begin{figure}
 \centering
 \includegraphics[width=0.9\columnwidth]{./figure/doubleext.eps}
@@ -278,7 +296,7 @@ To speed up the matching process of extension pattern 1, we rearrange the genera
 	\label{algo:optDV}
 \end{algorithm}
 
-\section{The Elimination Phase} \label{sec:eliphase} GSI \cite{zeng2020gsi} matches only one query edge in a GPU kernel and Lai et al.
+\section{The Elimination Phase\label{sec:eliphase}}  GSI \cite{zeng2020gsi} matches only one query edge in a GPU kernel and Lai et al.
 \cite{lai2015scalable} matches at most two query edges at each iteration. Both methods can not fully utilize the elimination power of
 backward edges. In our approach, we match as many backward edges as possible to eliminate invalid partial embeddings at early stages.
 Algorithm \ref{algo:eliphase} demonstrates how our approach deals with the eliminate phase. For each partial embedding $emb$ (line 2), we
@@ -305,7 +323,7 @@ Load interval indexes of $elp$ into shared memory\;
 
 
 
-\section{Matching Order} Many previous researches \cite{bi2016efficient,sun2020subgraph,sun2020rapidmatch,guo2020gpu} have explored how to
+\section{Matching Order\label{sec:matchingorder}} Many previous researches \cite{bi2016efficient,sun2020subgraph,sun2020rapidmatch,guo2020gpu} have explored how to
 generate an effective matching order to speed up the matching process. However, all of these methods are designed for single-vertex
 extension subgraph matching and not suitable for our DV-ext method. In this work, we propose a matching order generation algorithm based on
 the structural information of the query graph. The key idea of our algorithm is to match all available backward edges in the query graph as

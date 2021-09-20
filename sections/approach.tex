@@ -52,7 +52,7 @@ $newEMB$\; $\textsc{ExtKernel}(elp,NULL,newEMB,\pi[0])$\; $EMB \leftarrow newEMB
 %than hash-PCSR.
 %
 %\subsection{PCSR}
-Real-world graphs are often too large to fit into the GPU memory. As a result, only the currently needed graph data should be stored in the
+Real-world graphs are often too large to fit into the GPU memory. Therefore, only the currently needed graph data should be stored in the
 GPU memory at a given time. \SystemName extends the Partitioned Compressed Sparse Row (PCSR), the data graph storage format used by GSI
 \cite{zeng2020gsi}. This format groups edge with the same label into an edge partition, which is then stored in the Compressed Sparse Row
 (CSR) sparse matrix storage format \FIXME{\cite{}}. By doing so, only the partition with the same edge label as the matching edge needs to
@@ -100,9 +100,9 @@ $newVID \leftarrow 1$\;
 \end{algorithm}
 
 
-To reduce the amount of reserved, unused memory space required by the PCSR's hash function, we record the range of contiguous VIDs of an
-edge label partition. The contiguous range of VIDs is recorded in an \emph{interval index} structure as shown in Figure
-\ref{fig:dataformat}(d), which stores the first VID and the number of continuous VIDs in the range.
+To reduce the amount of unused memory space required by the PCSR's hash function, we record the range of contiguous VIDs of an edge label
+partition. The contiguous range of VIDs is recorded in an \emph{interval index} structure as shown in Figure \ref{fig:dataformat}(d), which
+stores the first VID and the number of continuous VIDs in the range.
 
 Because an edge label partition may contain many small intervals, directly mapping each interval to be stored in an interval index will
 result in many interval index structures. This is not ideal because having a large number of interval indices means we will need many
@@ -166,6 +166,8 @@ process stops until all VIDs have been renamed and recored in the interval indic
 %
 %After replacing old VIDs with new VIDs, we build interval indexes, row offset, and column indexes for each edge label partition. Additionally, we group neighbors of each vertex by vertex labels and then sort neighbors in each group by their VIDs. To speed up the searching process of a VID, we load interval indexes of an edge label partition into GPU shared memory. In summary, our interval-PCSR is more space efficient than hash-PCSR in two aspects: (1) interval-PCSR does not need to store VIDs while hash-PCSR needs VIDs to evaluate whether the VID pointed by the hash index is the searching VID; (2) interval-PCSR has no empty entries while hash-PCSR uses 30 empty entries for each vertex to reduce collisions of the hash function.
 
+Figure \ref{} shows the storage size of \SystemName against the PCSR scheme used by GSI for a \FIXME{xx} graph. The \SystemName storage
+format reduces the storage size (and the GPU memory footprint) by \FIXME{xx\%}.
 
 \section{The Extension Phase}
 \begin{figure}

@@ -1,5 +1,5 @@
 \section{Background}
-\subsection{Problem Definitions}
+\subsection{Preliminaries}
 Given two graphs $q$ and $G$, the task of subgraph matching is to determine if the larger graph $G$ contains a subgraph that is isomorphic
 to the query graph $q$. If the graphs include node and edge labels (or features), both the topology and the features should be matched. The
 large graph $G$ is known as a data or target graph.  Subgraph matching is to find all subgraphs (also known as embeddings\footnote{Not to
@@ -37,19 +37,28 @@ matches up to two vertices at the same time, but the techniques can be extended 
 \cparagraph{Backward edge.} Given a query graph $q$ and a subgraph $q'$ of $q$, if an edge $e$ exists in $q$ but not in subgraph $q'$ and
 $e$ connects two vertices of $q'$, we call $e$ the backward edge.
 
-\begin{figure}
+\begin{figure}[t!]
 \centering
 \includegraphics[width=\columnwidth]{./figure/automorphism.eps}
 \caption{Examples of automorphic and non-automorphic embeddings.}	
 \label{fig:automo}
+\FIXME{Labeling the subgraphs.}
 \end{figure}
 
-If a query graph is symmetric, multiple embeddings can be isomorphic to the same subgraph of the data graph. As shown in Figure
-\ref{fig:automo}, the query graph has two symmetric vertices, $u_1$ and $u_2$ and two isomorphic embeddings. We can see in Figure
-\ref{fig:automo} that the two embeddings are the same subgraph of the data graph. To eliminate redundant embeddings, GraphPi
-\cite{shi2020graphpi} and GraphZero \cite{mawhirter2019graphzero} generate restrictions on query vertices and the corresponding data
-vertices in each embedding. Figure \ref{fig:automo} shows that with the restriction $u_1 > u_2$, we can eliminate the redundant embedding.
-We use the same method as GraphPi and GraphZero to break the symmetry of a query graph.
+\cparagraph{Handling graph symmetry.} For a symmetric query graph\FIXME{\cite{}}, multiple embeddings can be isomorphic to the same
+subgraph of the data graph. Figure \ref{fig:automo} shows one of such examples, where the query graph has two symmetric vertices, $u_1$ and
+$u_2$ and two isomorphic embeddings (Figure \ref{fig:automo}c) that all corresponding to the same subgraph of the data graph with vertices
+$1, 3, 4$ (Figure \ref{fig:automo}b). To eliminate the duplicate embeddings, it is standard practice is to impose some restrictions on
+graph matching \cite{ mawhirter2019graphzero, shi2020graphpi}. Figure \ref{fig:automo}d shows the matching criterion used by GraphPi and
+GraphZero, which chooses an embedding that is \FIXME{describe the relation}. \SystemName uses the same criteria as GraphPi and GraphZero to
+break the symmetry of a query graph.
+
+%If a query graph is symmetric, multiple embeddings can be isomorphic to the same subgraph of the data graph. As shown in Figure
+%\ref{fig:automo}, the query graph has two symmetric vertices, $u_1$ and $u_2$ and two isomorphic embeddings. We can see in Figure
+%\ref{fig:automo} that the two embeddings are the same subgraph of the data graph. To eliminate redundant embeddings, GraphPi
+%\cite{shi2020graphpi} and GraphZero \cite{mawhirter2019graphzero} generate restrictions on query vertices and the corresponding data
+%vertices in each embedding. Figure \ref{fig:automo} shows that with the restriction $u_1 > u_2$, we can eliminate the redundant embedding.
+%We use the same method as GraphPi and GraphZero to break the symmetry of a query graph.
 
 \subsection{GPU Architecture}
 GPUs are general-purpose massively parallel computing devices. They are widely used to accelerate graph processing tasks, including

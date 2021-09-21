@@ -19,13 +19,15 @@ subgraph matching as follows.
 %query graph $q$.
 
 \cparagraph{Matching order.} Given a query graph $q$, a matching order $\pi$ is a permutation of vertices in $q$, where $\pi[i]$ is the
-$i$th vertex in $\pi$.
+$i$th vertex in $\pi$. In essence, the matching order defines which order we match individual vertices of the query graph $q$ with the
+counterparts from the data graph $G$. Studies have shown that choosing the right matching order can have a significant impact on
+performance \cite{bi2016efficient,sun2020subgraph,sun2020rapidmatch,guo2020gpu}.  \SystemName provides a dedicated algorithm to generate
+the matching order; see Section \ref {sec:matchingorder}.
 
-\cparagraph{Partial embedding.} Given a query graph $q$ and a matching order $\pi$, our approach matches one or more than one query
-vertices iteratively by following the pre-defined matching order $\pi$. Our current implementation matches up to two vertices, but the
-techniques can be extended to match more than two vertices simultaneously. Until we iterate over all matching sequences defined in the
-match order of the query graph, we only obtain a partial embedding (i.e., not all matched subgraphs are found) because only a sub-query
-graph has been applied.
+\cparagraph{Partial embedding.} Given a query graph $q$ and a matching order $\pi$, \SystemName iteratively choose one or multiple vertices
+from the matching order $\pi$ to perform subgraph matching. Until we iterate over all vertices from the query graph in the match order, we
+only apply a sub-query graph and hence will only obtain a partial embedding (or subgraph). Our current implementation matches up to two
+vertices at the same time, but the techniques can be extended to more than two vertices.
 
 %Given a query graph $q$ and a matching order $\pi$, the subgraph matching will match one or two query
 %vertices along $\pi$ iteratively. Before reaching the end of $\pi$, the matched query vertices and edges constitute a sub-query graph of

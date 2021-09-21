@@ -1,15 +1,15 @@
 \section{Background}
 \subsection{Preliminaries}
 Given two graphs $q$ and $G$, the task of subgraph matching is to determine if the larger graph $G$ contains a subgraph that is isomorphic
-to the query graph $q$. If the graphs include node and edge labels (or features), both the topology and the features should be matched. The
-large graph $G$ is known as a data or target graph.  Subgraph matching is to find all subgraphs (also known as embeddings\footnote{Not to
-confuse with the concept of embeddings (i.e., vectors) used by deep learning.} ) of the data graph, which are isomorphic to the query
-graph.
+to the query graph $q$. If the query and data graphs include node and edge labels (or features), both the topology and the features should
+be matched. The large graph $G$ is known as a data or target graph.  Subgraph matching is to find all subgraphs (also known as graph
+\emph{embeddings}\footnote{Not to confuse with the concept of embeddings (i.e., vectors) used by deep learning.}) of the data graph, which
+are isomorphic to the query graph.
 
-In this work, we focus on mining subgraphs from an undirected labeled data graph $G=\{V,E,\Sigma,L_V,L_E\}$, where $V$, $E$ and $\Sigma$
-are a set of vertices, edges and labels respectively,  $L_V$ is a function that associates a vertex $v \in V$ with a label $L_V \in
-\Sigma$, and $L_E$ is a function that associates an edge $e \in E$ with a label $L_E \in \Sigma$. We describes a few important concepts of
-subgraph matching as follows.
+In this work, we target mining subgraphs from an \emph{undirected} and \emph{labeled} data graph $G=\{V,E,\Sigma,L_V,L_E\}$, where $V$, $E$
+and $\Sigma$ are a set of vertices, edges and labels respectively,  $L_V$ is a function that associates a vertex $v \in V$ with a label
+$L_V \in \Sigma$, and $L_E$ is a function that associates an edge $e \in E$ with a label $L_E \in \Sigma$. We describes a few important
+concepts of subgraph matching as follows.
 
 
 %\cparagraph{Subgraph matching.} A graph $g=\{V_g,E_g,\Sigma_g,L_{V_g},L_{E_g}\}$ is isomorphic to a query graph
@@ -24,10 +24,10 @@ counterparts from the data graph $G$. Studies have shown that choosing the right
 performance \cite{bi2016efficient,sun2020subgraph,sun2020rapidmatch,guo2020gpu}.  \SystemName provides a dedicated algorithm to generate
 the matching order; see Section \ref {sec:matchingorder}.
 
-\cparagraph{Partial embedding.} Given a query graph $q$ and a matching order $\pi$, \SystemName iteratively chooses unprocessed one or
-multiple vertices from the matching order $\pi$ to perform subgraph matching. Until we iterate over all vertices from the query graph in
-the match order, we only apply a sub-query graph and hence will only obtain a partial embedding (or subgraph). Our current implementation
-matches up to two vertices at the same time, but the techniques can be extended to more than two vertices.
+\cparagraph{Partial embedding.} Given a query graph $q$ and a matching order $\pi$, \SystemName iteratively chooses  one or multiple
+unprocessed vertices from the matching order $\pi$ to perform subgraph matching. Before we match the last vertex in the matching order, we
+only apply a sub-query graph and hence will obtain a partial embedding (or subgraph). Our current implementation matches up to two vertices
+at the same time, but the techniques can be extended to more than two vertices (see \FIXME{Section \ref{}}).
 
 %Given a query graph $q$ and a matching order $\pi$, the subgraph matching will match one or two query
 %vertices along $\pi$ iteratively. Before reaching the end of $\pi$, the matched query vertices and edges constitute a sub-query graph of
@@ -45,13 +45,14 @@ $e$ connects two vertices of $q'$, we call $e$ the backward edge.
 \FIXME{Labeling the subgraphs.}
 \end{figure}
 
-\cparagraph{Handling graph symmetry.} For a symmetric query graph\FIXME{\cite{}}, multiple embeddings can be isomorphic to the same
-subgraph of the data graph. Figure \ref{fig:automo} shows one of such examples, where the query graph has two symmetric vertices, $u_1$ and
-$u_2$ and two isomorphic embeddings (Figure \ref{fig:automo}c) that all corresponding to the same subgraph of the data graph with vertices
-$1, 3, 4$ (Figure \ref{fig:automo}b). To eliminate the duplicate embeddings, it is standard practice is to impose some restrictions on
-graph matching \cite{ mawhirter2019graphzero, shi2020graphpi}. Figure \ref{fig:automo}d shows the matching criterion used by GraphPi and
-GraphZero, which chooses an embedding that is \FIXME{describe the relation}. \SystemName uses the same criteria as GraphPi and GraphZero to
-break the symmetry of a query graph.
+\cparagraph{Handling graph symmetry.} If a query graph is symmetric \FIXME{\cite{}}, multiple embeddings can be isomorphic to the same
+subgraph of the data graph. Figure \ref{fig:automo} provides one of such examples, where the query graph has two symmetric vertices, $u_1$
+and $u_2$ and two isomorphic embeddings (Figure \ref{fig:automo}c) that all corresponding to the same subgraph of the data graph with
+vertices $1, 3, 4$ (Figure \ref{fig:automo}b). To eliminate the duplicate embeddings, it is standard practice is to impose some
+restrictions on graph matching \cite{ mawhirter2019graphzero, shi2020graphpi}. Figure~\ref{fig:automo}d shows the matching criterion used
+by GraphPi and GraphZero, which chooses an embedding where the data graph candidate vertex that has the largest number (i.e., we choose to
+match $u_1$ with vertex 4 rather than 3 from the data graph) is chosen for a query graph vertex. This is a scheme used by GraphPi
+\cite{shi2020graphpi} and GraphZero \cite{mawhirter2019graphzero}, and \SystemName also adopts this common practice.
 
 %If a query graph is symmetric, multiple embeddings can be isomorphic to the same subgraph of the data graph. As shown in Figure
 %\ref{fig:automo}, the query graph has two symmetric vertices, $u_1$ and $u_2$ and two isomorphic embeddings. We can see in Figure

@@ -1,22 +1,39 @@
 \section{Background}
 \subsection{Problem Definitions}
-Given two graphs $q$ and $G$, the task of subgraph matching is to determine if the data graph $G$ contains a subgraph that is isomorphic to
-the query graph $q$. In this work, we focus on mining subgraphs from an undirected labeled data graph $G=\{V,E,\Sigma,L_V,L_E\}$, where
-$V$, $E$ and $\Sigma$ are a set of vertices, edges and labels respectively,  $L_V$ is a function that associates a vertex $v \in V$ with a
-label $L_V \in \Sigma$, and $L_E$ is a function that associates an edge $e \in E$ with a label $L_E \in \Sigma$.
+Given two graphs $q$ and $G$, the task of subgraph matching is to determine if the larger graph $G$ contains a subgraph that is isomorphic
+to the query graph $q$. If the graphs include node and edge labels (or features), both the topology and the features should be matched. The
+large graph $G$ is known as a data or target graph.  Subgraph matching is to find all subgraphs (also known as embeddings\footnote{Not to
+confuse with the concept of embeddings (i.e., vectors) used by deep learning.} ) of the data graph, which are isomorphic to the query
+graph.
+
+In this work, we focus on mining subgraphs from an undirected labeled data graph $G=\{V,E,\Sigma,L_V,L_E\}$, where $V$, $E$ and $\Sigma$
+are a set of vertices, edges and labels respectively,  $L_V$ is a function that associates a vertex $v \in V$ with a label $L_V \in
+\Sigma$, and $L_E$ is a function that associates an edge $e \in E$ with a label $L_E \in \Sigma$. We describes a few important concepts of
+subgraph matching as follows.
 
 
-\noindent
-\textbf{Definition 1 \emph{(Subgraph Matching)}} A graph $g=\{V_g,E_g,\Sigma_g,L_{V_g},L_{E_g}\}$ is isomorphic to a query graph $q=\{V_q,E_q,\Sigma_q,L_{V_q},L_{E_q}\}$, if and only if there exists a bijective function $f: V_q \rightarrow V_g$ such that (1) $\forall u \in V_q$, $f(u) \in V_g$ and $L_{V_q}(u) = L_{V_g}(f(u))$; and (2) $\forall e_q=(u,u') \in E_q$, $e_g=(f(u),f(u')) \in E_g$ and $L_{E_q}(e_q)=L_{E_g}(e_g)$. Subgraph matching is to find all subgraphs (called embeddings) of a data graph $G$ that are isomorphic to a query graph $q$.
+%\cparagraph{Subgraph matching.} A graph $g=\{V_g,E_g,\Sigma_g,L_{V_g},L_{E_g}\}$ is isomorphic to a query graph
+%$q=\{V_q,E_q,\Sigma_q,L_{V_q},L_{E_q}\}$, if and only if there exists a bijective function $f: V_q \rightarrow V_g$ such that (1) $\forall
+%u \in V_q$, $f(u) \in V_g$ and $L_{V_q}(u) = L_{V_g}(f(u))$; and (2) $\forall e_q=(u,u') \in E_q$, $e_g=(f(u),f(u')) \in E_g$ and
+%$L_{E_q}(e_q)=L_{E_g}(e_g)$. Subgraph matching is to find all subgraphs (called embeddings) of a data graph $G$ that are isomorphic to a
+%query graph $q$.
 
-\noindent
-\textbf{Definition 2 \emph{(Matching Order)}} Given a query graph $q$, a matching order $\pi$ is a permutation of vertices in $q$, and $\pi[i]$ is the $i$th vertex in $\pi$.
+\cparagraph{Matching order.} Given a query graph $q$, a matching order $\pi$ is a permutation of vertices in $q$, where $\pi[i]$ is the
+$i$th vertex in $\pi$.
 
-\noindent
-\textbf{Definition 3 \emph{(Partial Embedding)}} Given a query graph $q$ and a matching order $\pi$, the subgraph matching will match one or two query vertices along $\pi$ iteratively. Before reaching the end of $\pi$, the matched query vertices and edges constitute a sub-query graph of $q$, which we call the partial query. The subgraphs of a data graph $G$ that are isomorphic to the partial query are called partial embeddings.
+\cparagraph{Partial embedding.} Given a query graph $q$ and a matching order $\pi$, our approach matches one or more than one query
+vertices iteratively by following the pre-defined matching order $\pi$. Our current implementation matches up to two vertices, but the
+techniques can be extended to match more than two vertices simultaneously. Until we iterate over all matching sequences defined in the
+match order of the query graph, we only obtain a partial embedding (i.e., not all matched subgraphs are found) because only a sub-query
+graph has been applied.
 
-\noindent
-\textbf{Definition 4 \emph{(Backward Edge)}} Given a query graph $q$ and a partial query graph $q'$ of $q$, if an edge $e$ exists in $q$ but not in $q'$ and $e$ connects two vertices of $q'$, we call $e$ the backward edge.
+%Given a query graph $q$ and a matching order $\pi$, the subgraph matching will match one or two query
+%vertices along $\pi$ iteratively. Before reaching the end of $\pi$, the matched query vertices and edges constitute a sub-query graph of
+%$q$, which we call the partial query. The subgraphs of a data graph $G$ that are isomorphic to the partial query are called partial
+%embeddings.
+
+\cparagraph{Backward edge.} Given a query graph $q$ and a partial query graph $q'$ of $q$, if an edge $e$ exists in $q$ but not in $q'$ and
+$e$ connects two vertices of $q'$, we call $e$ the backward edge.
 
 \begin{figure}
 \centering
@@ -25,7 +42,12 @@ label $L_V \in \Sigma$, and $L_E$ is a function that associates an edge $e \in E
 \label{fig:automo}
 \end{figure}
 
-If a query graph is symmetric, multiple embeddings can be isomorphic to the same subgraph of a data graph. As shown in Figure \ref{fig:automo}, the query graph has two symmetric vertices, $u_1$ and $u_2$ and two isomorphic embeddings. We can see in Figure \ref{fig:automo} that the two embeddings are the same subgraph of the data graph. To eliminate redundant embeddings, GraphPi \cite{shi2020graphpi} and GraphZero \cite{mawhirter2019graphzero} generate restrictions on query vertices and the corresponding data vertices in each embedding. Figure \ref{fig:automo} shows that with the restriction $u_1 > u_2$, we can eliminate the redundant embedding. We use the same method as GraphPi and GraphZero to break the symmetry of a query graph.
+If a query graph is symmetric, multiple embeddings can be isomorphic to the same subgraph of the data graph. As shown in Figure
+\ref{fig:automo}, the query graph has two symmetric vertices, $u_1$ and $u_2$ and two isomorphic embeddings. We can see in Figure
+\ref{fig:automo} that the two embeddings are the same subgraph of the data graph. To eliminate redundant embeddings, GraphPi
+\cite{shi2020graphpi} and GraphZero \cite{mawhirter2019graphzero} generate restrictions on query vertices and the corresponding data
+vertices in each embedding. Figure \ref{fig:automo} shows that with the restriction $u_1 > u_2$, we can eliminate the redundant embedding.
+We use the same method as GraphPi and GraphZero to break the symmetry of a query graph.
 
 \subsection{GPU Architecture}
 GPUs are general-purpose massively parallel computing devices. They are widely used to accelerate graph processing tasks, including

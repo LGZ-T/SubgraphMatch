@@ -24,10 +24,10 @@ counterparts from the data graph $G$. Studies have shown that choosing the right
 performance \cite{bi2016efficient,sun2020subgraph,sun2020rapidmatch,guo2020gpu}.  \SystemName provides a dedicated algorithm to generate
 the matching order; see Section \ref {sec:matchingorder}.
 
-\cparagraph{Partial embedding.} Given a query graph $q$ and a matching order $\pi$, \SystemName iteratively choose one or multiple vertices
-from the matching order $\pi$ to perform subgraph matching. Until we iterate over all vertices from the query graph in the match order, we
-only apply a sub-query graph and hence will only obtain a partial embedding (or subgraph). Our current implementation matches up to two
-vertices at the same time, but the techniques can be extended to more than two vertices.
+\cparagraph{Partial embedding.} Given a query graph $q$ and a matching order $\pi$, \SystemName iteratively chooses unprocessed one or
+multiple vertices from the matching order $\pi$ to perform subgraph matching. Until we iterate over all vertices from the query graph in
+the match order, we only apply a sub-query graph and hence will only obtain a partial embedding (or subgraph). Our current implementation
+matches up to two vertices at the same time, but the techniques can be extended to more than two vertices.
 
 %Given a query graph $q$ and a matching order $\pi$, the subgraph matching will match one or two query
 %vertices along $\pi$ iteratively. Before reaching the end of $\pi$, the matched query vertices and edges constitute a sub-query graph of

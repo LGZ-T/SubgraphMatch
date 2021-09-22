@@ -7,10 +7,10 @@
 %based on its vertex and edge labels. Next, we generate a matching order for the query phases, which satisfies the constraints of the query
 %vertices. Examples of such constraints include \FIXME{xx, xx and xx}.
 
-Figure~\ref{} depicts the overall workflow of our approach. At the offline stage, we convert the data graph into a carefully designed
-storage format. This format is designed to accelerate GPU kernel computation while reducing the GPU memory footprint when processing large
-graphs (Section \ref{sec:storage}). We note that this storage conversion only needs to be performed once, which is a one-off cost performed
-offline.
+\FIXME{Figure~\ref{}} depicts the overall workflow of our approach. At the offline stage, we convert the data graph into a carefully
+designed storage format. This format is designed to accelerate GPU kernel computation while reducing the GPU memory footprint when
+processing large graphs (Section \ref{sec:storage}). We note that this storage conversion only needs to be performed once, which is a
+one-off cost performed offline.
 
 During runtime, we first convert the input query graph into our storage format. We then decompose the query graph into two query phases
 based on its vertex and edge labels. In the first extension phase (Section \ref {sec:extensionphase}), we extend one or two vertices
@@ -70,16 +70,17 @@ $newEMB$\; $\textsc{ExtKernel}(elp,NULL,newEMB,\pi[0])$\; $EMB \leftarrow newEMB
 %than hash-PCSR.
 %
 %\subsection{PCSR}
-Real-world graphs are often too large to fit into the GPU memory. Therefore, only the currently needed graph data should be stored in the
-GPU memory at a given time. \SystemName extends the Partitioned Compressed Sparse Row (PCSR), the data graph storage format used by GSI
-\cite{zeng2020gsi}. This format groups edge with the same label into an edge partition, which is then stored in the Compressed Sparse Row
-(CSR) sparse matrix storage format \FIXME{\cite{}}. By doing so, only the partition with the same edge label as the matching edge needs to
-be moved from the CPU memory into the GPU memory. PCSR makes some small modifications to the CSR format. As depicted in Figure
-\ref{fig:dataformat}a, a VID can be used to find the row offset of a vertex because VIDs are stored as contiguous elements in a classical
-CSR. Because after grouping edges into partitions, VIDs of vertices are no longer guaranteed to be continuous in the storage space (Figure
-\ref{fig:dataformat}b), GSI employs a hash function to translate a VID into a slot the corresponding elements in the edge partition
-structure. To reduce collisions of the hash function, some empty entries have to be reserved for each vertex (30 in GSI), which results in
-a large portion of unused GPU memory space. \SystemName is designed to avoid this pitfall.
+Real-world graphs are often too large to fit into the memory of a single GPU. Therefore, only part of the data that is needed for the
+current computation should be stored in the GPU memory at a given time. As a result, it is important to find a compact representation of
+the graph data without compromising the computation performance.e To this end, \SystemName extends the Partitioned Compressed Sparse Row
+(PCSR), the data graph storage format used by GSI \cite{zeng2020gsi}. This format groups edge with the same label into an edge partition,
+which is then stored in the Compressed Sparse Row (CSR) sparse matrix storage format \FIXME{\cite{}}. By doing so, only the partition with
+the same edge label as the matching edge needs to be moved from the CPU memory into the GPU memory. PCSR makes some small modifications to
+the CSR format. As depicted in Figure \ref{fig:dataformat}a, a VID can be used to find the row offset of a vertex because VIDs are stored
+as contiguous elements in a classical CSR. Because after grouping edges into partitions, VIDs of vertices are no longer guaranteed to be
+continuous in the storage space (Figure \ref{fig:dataformat}b), GSI employs a hash function to translate a VID into a slot the
+corresponding elements in the edge partition structure. To reduce collisions of the hash function, some empty entries have to be reserved
+for each vertex (30 in GSI), which results in a large portion of unused GPU memory space. \SystemName is designed to avoid this pitfall.
 
 
 \subsection{\SystemName Data Graph Storage Format}

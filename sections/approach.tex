@@ -121,19 +121,19 @@ $newVID \leftarrow 1$\;
 
 
 To reduce the amount of unused memory space required by the PCSR's hash function, we record the range of contiguous VIDs of an edge label
-partition. The contiguous range of VIDs is recorded in an \emph{interval index} structure as shown in Figure \ref{fig:dataformat}(d), which
-stores the first VID and the number of continuous VIDs in the range.
+partition (ELP). The contiguous range of VIDs is recorded in an \emph{interval index} structure as shown in Figure \ref{fig:dataformat}d,
+which stores the first VID and the number of continuous VIDs in the range.
 
-Because an edge label partition may contain many small intervals, directly mapping each interval to be stored in an interval index will
-result in many interval index structures. This is not ideal because having a large number of interval indices means we will need many
-memory accesses to just find the interval for a VID. For example, if we want to find the index of VID 7 in Figure \ref{fig:dataformat}d,
-with a naïve interval scheme, we will have to compare 7 with the first three interval indices before locating VID 7 in the third interval
-index. Our design avoids this pitfall by carefully mapping the original VIDs to new VIDs, to allow one to generate more contiguous new VIDs
-in each edge label partition, which in turn leads to a smaller number of intervals. Our data storage format shares the same spirit of
-Huffman code – we want to reduce the number of memory access when processing the largest edge label partition (i.e., the partition that
-contains the largest number of VIDs).
+Because an ELP may contain many small intervals, directly mapping each interval to be stored in an interval index will result in many
+interval indices. This is not ideal because having a large number of interval indices means we will need many memory accesses to just find
+the interval for a VID. For example, if we want to find the index of VID 7 in Figure \ref{fig:dataformat}d, with a naïve interval scheme,
+we will have to compare number 7 against the first three interval indices before locating VID 7 in the third interval index. Our design
+avoids this pitfall by carefully mapping the original VIDs to new VIDs, to allow one to generate more contiguous new VIDs in each edge
+label partition, which in turn leads to a smaller number of intervals. Our data storage format shares the same spirit of Huffman coding
+\FIXME{\cite{}} – we want to reduce the number of memory access when processing the largest ELP (i.e., the partition that contains the
+largest number of VIDs).
 
-\subsection{Data Graph Storage Format Algorithm}
+\subsection{\SystemName Storage Format Algorithm}
 
  As described in Algorithm \ref{algo:genmap} and Figure \ref{fig:dataformat}e, \SystemName takes
 several steps to convert the data and query graphs into a GPU-tuned storage format, described as follows.
@@ -143,25 +143,24 @@ several steps to convert the data and query graphs into a GPU-tuned storage form
 reducing the number of intervals for this partition can help reduce the average memory access latency. For the example shown in Figure
 \ref{fig:dataformat}, edge label partition 0 is selected because it contains the largest number of vertices.
 
-\cparagraph{Step 2: Rename VIDs.} In the second step, we try to increase the continuous VID interval by renaming the VID. To this end, for
+\cparagraph{Step 2: Rename VIDs.} In the second step, we try to increase the continuous VID interval by renaming the VIDs. To this end, for
 each vertex, we find out all ELPs that contain the vertex. For example, vertices 5 and 7 in Figure \ref{fig:dataformat}e belong to ELPs 0,
-1 and 3. These ELPs form a share set for the vertex. For example, ELPs 0, 1, 3 form a share set for vertices 5 and 7 in Figure
-\ref{fig:dataformat}e. Next, we merge VIDs that have the same shares set into a subpartition (line 4 in Algorithm \ref{algo:genmap}). For
-the example shown in Figure \ref{fig:dataformat}e, we map vertices 5 and 7 to a subpartition, subpart 1, because they have the same share
-set. We apply this grouping strategy to the largest ELP found in step 1. For the vertices that belong to the same subpartition, we can
-assign unique, continuous new VIDs to them in arbitrary order, as long as these new VIDs are contiguous and follow the largest VID from the
-last processed subpartition.
+1 and 3 - these ELPs form a share set for the two vertices. Next, we merge VIDs that have the same shares set into a subpartition (line 4
+in Algorithm~\ref{algo:genmap}). For the example shown in Figure \ref{fig:dataformat}e, we map vertices 5 and 7 to a subpartition, subpart
+1, because they have the same share set. We apply this grouping strategy to the largest ELP found in step 1. For the vertices that belong
+to the same subpartition, we can assign unique, continuous new VIDs to them in arbitrary order, as long as these new VIDs are contiguous
+and follow the largest VID from the last processed subpartition.
 
 \cparagraph{Step 3: Process subpartitions.} To determine the order of the subpartitions of an ELP to be processed, we start from the
-subpartition that is shared by the largest number of ELPs.  For the example shown in Figure \ref{fig:dataformat}e-1, we would first process
+subpartition that is shared by most ELPs.  This means for the example shown in Figure \ref{fig:dataformat}e-1, we would first process
 subpart 1, because it has the largest share set (with 4 vertices).  The next subpartition we choose will be the one that has the largest
 number of common vertices between its share set and the shared set of the last chosen subpartition. Looking at Figure
-\ref{fig:dataformat}e-1 again, subpartition 2 will be the second chosen subpartition because it has three vertices in common, $0, 1, 3$ in
-its shared set with the shared set of subpartition 1 (the first chosen subpartition). We choose this strategy because of the following two
-reasons. First, the larger number of elements in common in the shared sets of two subpartitions, the more ELPs will have the two
-subpartitions. Secondly, because we ensure the VIDs between two consecutively processed subpartitions are continuous, we can then merge the
-VIDs of the two subpartitions to form a contiguous interval to be stored in a single interval index. . Using this strategy, we can use a
-single interval index to record the new VIDs of subpartitions 1 and 2 in Figure \ref{fig:dataformat}e-3.
+\ref{fig:dataformat}e-1 again, subpartition 2 will be the secondly chosen subpartition because its shared set has three vertices ($0, 1,
+3$) with the share set of subpartition 1 (the firstly chosen subpartition). We choose this strategy because of the following two reasons.
+First, the larger number of elements in common in the shared sets of two subpartitions, the more ELPs will have the two subpartitions.
+Secondly, because we ensure the VIDs between two consecutively processed subpartitions are continuous, we can then merge the VIDs of the
+two subpartitions to form a contiguous interval to be stored in a single interval index. . Using this strategy, we can use a single
+interval index to record the new VIDs of subpartitions 1 and 2 in Figure \ref{fig:dataformat}e-3.
 
 
 \cparagraph{Step 4: Repeat before Stop.} We delete the processed vertices from an ELP, and repeat steps 1 to 4 for each ELP in turn. This

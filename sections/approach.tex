@@ -1,53 +1,27 @@
+
 \section{Overview of Our Approach}
-%In this section, we give a detailed description of our approach, which targets on utilizing GPU to match query graphs on labeled undirected graphs.
-%\subsection{Overview}
-%Figure~\ref{} depicts the overall workflow of our approach. We first convert the input query graph into a storage format to be used by our
-%method. This storage format is designed to improve space efficiency and reduce the GPU memory access latency. We note that this conversion
-%only needs to be performed once. To perform subgraph matching on the GPU, we first decompose the query graph into multiple query phases
-%based on its vertex and edge labels. Next, we generate a matching order for the query phases, which satisfies the constraints of the query
-%vertices. Examples of such constraints include \FIXME{xx, xx and xx}.
+\begin{figure*}
+	\centering
+	\includegraphics[width=\textwidth]{./figure/approachoverview.eps}
+	\caption{An overview of our N-vertex extension method.}
+	\label{fig:overview}
+\end{figure*}
 
-\FIXME{Figure~\ref{}} depicts the overall workflow of our approach. At the offline stage, we convert the data graph into a carefully
+Figure~\ref{fig:overview} depicts the overall workflow of our approach. At the offline stage, we convert the data graph into a carefully
 designed storage format. This format is designed to accelerate GPU kernel computation while reducing the GPU memory footprint when
-processing large graphs (Section \ref{sec:storage}). We note that this storage conversion only needs to be performed once, which is a
-one-off cost performed offline.
+processing large graphs (Section \ref{sec:storage}). We note that this storage conversion only needs to be performed once, which is a one-off cost performed offline.
 
-During runtime, we first convert the input query graph into our storage format. We then decompose the query graph into two query phases
-based on its vertex and edge labels. In the first extension phase (Section \ref {sec:extensionphase}), we extend one or two vertices
-denoted as SV and DV phases respectively, as shown in Figure \ref{fig:extpattern}. In the second elimination phase (Section \ref
-{sec:eliphase}), we \FIXME{explain the elimination phase}). Finally, we generate  Next, we generate a matching order for the query phases,
-which satisfies the constraints of the query vertices (i.e., matching order). This stage is detailed in  Section \ref {sec:matchingorder}.
-
-
-Algorithm \ref{algo:submatch} shows our GPU-tuned subgraph matching algorithm. With our storage format, we are able to load edges with the
-same label at once as we iterate over the input graph  (lines 2, 7). We use the extension phase kernel to generate the intial graph
-embeddings (line 4). We then move to process the extension and elimination phases GPU kernels (lines 9 and 11, respectively). In the later
-extension phase, we update the embeddings using the previously generated graph embedding. At the end of the iteration, we output the final
-graph embeddings (line 13).
-
-
-
-
-%Algorithm \ref{algo:submatch} shows our GPU-tuned subgraph matching algorithm. We first     decompose the query graph into query phases
-%based on its vertex and edge labels.  All edges extended in the query phase have the same edge label since we load one edge
-%label partition at each iteration (lines 2, 7). There are two types of query phases, \emph{extension phase} and \emph{elimination phase}.
-%The extension phase contains one or two vertices for extension (line 9), denoted as SV-phase and DV-phase respectively, as shown in Figure
-%\ref{fig:extpattern}. The elimination phase contains multiple backward edges for elimination (line 11). The first query phase of the
-%matching order is used to generate initial embeddings. We use the same GPU kernel as the extension phase to generate initial embeddings
-%(line 4). The main difference between the first query phase and the extension phase is that the source VIDs of the former one are from the
-%edge label partition, while the later one are from previous embeddings. Finally, we use different GPU kernels to match different types of
-%query phases (lines 10, 12), and output the final embeddings (line 13). In the following sections, we elaborate each step in detail.
-
-
+During runtime, Algorithm \ref{algo:submatch} is used to perform subgraph matching. We first decompose the query graph into the core structure and trees according to the method proposed in \cite{bi2016efficient}, and further decompose them into extension and elimination phases. Each extension phase contains exactly one extension pattern and each elimination phase contains one or more backward edges. In the meanwhile, we generate a matching order for extension and elimination phases, and restrictions on query vertices (line 1). All edges in an extension or elimination phase have the same edge label since we load one edge label partition at each iteration (lines 2, 7). The first extension phase of the matching order is used to generate initial embeddings (line 4). The main difference between the first and following extension phases is that the source vertices of the former one are from the edge label partition, while the later one are from previous embeddings. Finally, we use different GPU kernels to handle extension and elimination phases (lines 10, 12), and output final embeddings (line 13). In the following sections, we elaborate each step in detail.
 
 \section{Data Graph Storage Format\label{sec:storage}}
 \begin{figure*}
 \centering
 \includegraphics[width=\textwidth]{./figure/graphformat.eps}
 \caption{Demonstration of data graph formats generated by traditional CSR (a), hash-PCSR that is used by GSI (b), non-optimized interval-PCSR (c), and our
-optimized interval-PCSR (d). Note that the interval-PCSR does not store VIDs.}	
+optimized interval-PCSR (d). Note that VIDs in dashed squares do not need to be stored in memory.}	
 \label{fig:dataformat}
 \end{figure*}
+
 
 \begin{algorithm}[t!]
 \KwIn{the data graph in our format $G$, the query graph $q$} \KwOut{Embeddings of $q$ $EMB$} $\pi \leftarrow \textsc{GenMatchOrder}(q)$\;
@@ -65,26 +39,21 @@ $newEMB$\; $\textsc{ExtKernel}(elp,NULL,newEMB,\pi[0])$\; $EMB \leftarrow newEMB
 } \caption{\textsc{SubgraphMatching}} \label{algo:submatch}
 \end{algorithm}
 
-
-%We first briefly describe the state-of-the-art data graph format for labeled graphs on GPU, hash-PCSR which is proposed by GSI
-%\cite{zeng2020gsi}. Then, we give a detailed illustration of our data graph format, interval-PCSR, which is more space and time efficient
-%than hash-PCSR.
-%
-%\subsection{PCSR}
 Real-world graphs are often too large to fit into the memory of a single GPU. Therefore, only part of the data that is needed for the
 current computation should be stored in the GPU memory at a given time. As a result, it is important to find a compact representation of
-the graph data without compromising the computation performance.e To this end, \SystemName extends the Partitioned Compressed Sparse Row
-(PCSR), the data graph storage format used by GSI \cite{zeng2020gsi}. This format groups edge with the same label into an edge partition,
-which is then stored in the Compressed Sparse Row (CSR) sparse matrix storage format \FIXME{\cite{}}. By doing so, only the partition with
+the graph data without compromising the computation performance. To this end, \SystemName extends the Partitioned Compressed Sparse Row
+(PCSR), the data graph storage format used by GSI \cite{zeng2020gsi}. This format groups edge with the same label into an edge label partition,
+which is then stored in the Compressed Sparse Row (CSR) sparse matrix storage format. By doing so, only the partition with
 the same edge label as the matching edge needs to be moved from the CPU memory into the GPU memory. PCSR makes some small modifications to
 the CSR format. As depicted in Figure \ref{fig:dataformat}a, a VID can be used to find the row offset of a vertex because VIDs are stored
 as contiguous elements in a classical CSR. Because after grouping edges into partitions, VIDs of vertices are no longer guaranteed to be
-continuous in the storage space (Figure \ref{fig:dataformat}b), GSI employs a hash function to translate a VID into a slot the
+continuous in the storage space, GSI employs a hash function to translate a VID into a slot the
 corresponding elements in the edge partition structure. To reduce collisions of the hash function, some empty entries have to be reserved
 for each vertex (30 in GSI), which results in a large portion of unused GPU memory space. \SystemName is designed to avoid this pitfall.
 
 
 \subsection{\SystemName Data Graph Storage Format}
+
 \begin{algorithm}[t!]
 \KwIn{the set of all edge label partitions $ELP$}
 \KwOut{the mapping array $MAP$ with old and new vertex IDs are indices and values respectively}	
@@ -119,112 +88,77 @@ $newVID \leftarrow 1$\;
 \label{algo:genmap}
 \end{algorithm}
 
-
 To reduce the amount of unused memory space required by the PCSR's hash function, we record the range of contiguous VIDs of an edge label
-partition (ELP). The contiguous range of VIDs is recorded in an \emph{interval index} structure as shown in Figure \ref{fig:dataformat}d,
+partition (ELP). The contiguous range of VIDs is recorded in an \emph{interval index} structure as shown in Figure \ref{fig:dataformat}c,
 which stores the first VID and the number of continuous VIDs in the range.
 
 Because an ELP may contain many small intervals, directly mapping each interval to be stored in an interval index will result in many
 interval indices. This is not ideal because having a large number of interval indices means we will need many memory accesses to just find
-the interval for a VID. For example, if we want to find the index of VID 7 in Figure \ref{fig:dataformat}d, with a naïve interval scheme,
+the interval for a VID. For example, if we want to find the index of VID 7 in Figure \ref{fig:dataformat}c, with a naïve interval scheme,
 we will have to compare number 7 against the first three interval indices before locating VID 7 in the third interval index. Our design
 avoids this pitfall by carefully mapping the original VIDs to new VIDs, to allow one to generate more contiguous new VIDs in each edge
-label partition, which in turn leads to a smaller number of intervals. Our data storage format shares the same spirit of Huffman coding
-\FIXME{\cite{}} – we want to reduce the number of memory access when processing the largest ELP (i.e., the partition that contains the
-largest number of VIDs).
+label partition, which in turn leads to a smaller number of intervals. Our data storage format shares the same spirit of Huffman coding \cite{Moffat2019Huffman} – we want to reduce the number of memory access when processing the largest ELP (i.e., the partition that contains the largest number of VIDs).
 
 \subsection{\SystemName Storage Format Algorithm}
 
- As described in Algorithm \ref{algo:genmap} and Figure \ref{fig:dataformat}e, \SystemName takes
-several steps to convert the data and query graphs into a GPU-tuned storage format, described as follows.
+ As described in Algorithm \ref{algo:genmap} and Figure \ref{fig:dataformat}d, \SystemName takes several steps to convert the data graph into a GPU-tuned storage format, described as follows.
 
 \cparagraph{Step 1: Find the largest ELP.} We start by choosing the partition that contains the most vertices (line 3 in Algorithm
 \ref{algo:genmap}). Our intuition is that the more vertices a partition contains, the higher probability it will be accessed. Therefore,
 reducing the number of intervals for this partition can help reduce the average memory access latency. For the example shown in Figure
-\ref{fig:dataformat}, edge label partition 0 is selected because it contains the largest number of vertices.
+\ref{fig:dataformat}d \textbf{\textcircled{1}}, edge label partition 0 is selected because it contains the largest number of vertices.
 
 \cparagraph{Step 2: Rename VIDs.} In the second step, we try to increase the continuous VID interval by renaming the VIDs. To this end, for
-each vertex, we find out all ELPs that contain the vertex. For example, vertices 5 and 7 in Figure \ref{fig:dataformat}e belong to ELPs 0,
-1 and 3 - these ELPs form a share set for the two vertices. Next, we merge VIDs that have the same shares set into a subpartition (line 4
-in Algorithm~\ref{algo:genmap}). For the example shown in Figure \ref{fig:dataformat}e, we map vertices 5 and 7 to a subpartition, subpart
-1, because they have the same share set. We apply this grouping strategy to the largest ELP found in step 1. For the vertices that belong
+each vertex, we find out all ELPs that contain the vertex. For example, vertices 4 and 8 in Figure \ref{fig:dataformat}d \textbf{\textcircled{1}} belong to ELPs 0,
+1 and 2 - these ELPs form a share set for the two vertices. Next, we merge VIDs that have the same shares set into a subpartition (line 4
+in Algorithm~\ref{algo:genmap}). For the example shown in Figure \ref{fig:dataformat}d \textbf{\textcircled{1}}, we map vertices 4 and 8 to a subpartition, subpart 0, because they have the same share set. We apply this grouping strategy to the largest ELP found in step 1. For the vertices that belong
 to the same subpartition, we can assign unique, continuous new VIDs to them in arbitrary order, as long as these new VIDs are contiguous
 and follow the largest VID from the last processed subpartition.
 
 \cparagraph{Step 3: Process subpartitions.} To determine the order of the subpartitions of an ELP to be processed, we start from the
-subpartition that is shared by most ELPs.  This means for the example shown in Figure \ref{fig:dataformat}e-1, we would first process
-subpart 1, because it has the largest share set (with 4 vertices).  The next subpartition we choose will be the one that has the largest
-number of common vertices between its share set and the shared set of the last chosen subpartition. Looking at Figure
-\ref{fig:dataformat}e-1 again, subpartition 2 will be the secondly chosen subpartition because its shared set has three vertices ($0, 1,
-3$) with the share set of subpartition 1 (the firstly chosen subpartition). We choose this strategy because of the following two reasons.
+subpartition that is shared by most ELPs.  This means for the example shown in Figure \ref{fig:dataformat}d \textbf{\textcircled{1}}, we would first process
+subpart 0, because it has the largest share set (with 3 ELPs).  The next subpartition we choose will be the one that has the largest number of common ELPs between its share set and the shared set of the last chosen subpartition. Looking at Figure \ref{fig:dataformat}d \textbf{\textcircled{1}} again, subpartition 1 will be the secondly chosen subpartition because its shared set has two ELPs ($0, 1$) with the share set of subpartition 0 (the firstly chosen subpartition). We choose this strategy because of the following two reasons.
 First, the larger number of elements in common in the shared sets of two subpartitions, the more ELPs will have the two subpartitions.
 Secondly, because we ensure the VIDs between two consecutively processed subpartitions are continuous, we can then merge the VIDs of the
-two subpartitions to form a contiguous interval to be stored in a single interval index. . Using this strategy, we can use a single
-interval index to record the new VIDs of subpartitions 1 and 2 in Figure \ref{fig:dataformat}e-3.
+two subpartitions to form a contiguous interval to be stored in a single interval index. Using this strategy, we can use a single interval index to record the new VIDs of subpartitions 0 and 1 in Figure \ref{fig:dataformat}d \textbf{\textcircled{2}}.
 
 
 \cparagraph{Step 4: Repeat before Stop.} We delete the processed vertices from an ELP, and repeat steps 1 to 4 for each ELP in turn. This
-process stops until all VIDs have been renamed and recored in the interval indices. This is illustrated in Figure \ref{fig:dataformat}e-3.
+process stops until all VIDs have been renamed and recored in the interval indices. This is illustrated in Figure \ref{fig:dataformat}d \textbf{\textcircled{3}}.
 
 
+Figure \ref{fig:dataformat} shows the storage size of \SystemName against the PCSR scheme used by GSI for eight data graphs. The \SystemName storage
+format reduces the storage size (and the GPU memory footprint) by 83\%.
 
-%Our data graph format utilizes PCSR as the underlying data graph format but possesses efficient memory usage. To reduce the amount of
-%unused memory space caused by the hash function, we leverage the interval index to represent contiguous VIDs in an edge label partition, as
-%shown in Figure \ref{fig:dataformat}(d). Each interval index needs two entries to store the first VID and the length of this interval. The
-%main issue of interval index format is that an edge label partition may contain numerous small intervals, which causes a number of memory
-%accesses to find the right interval for a VID. For example, if we want to find the index of VID 7 in Figure \ref{fig:dataformat}(d), we
-%need to compare 7 with the first three interval indexes and find VID 7 in the third interval index. With careful design, we can compare VID
-%7 only once to find its index. The key idea of our interval-PCSR is to design a mapping from original VIDs to new VIDs, which can generate
-%more contiguous new VIDs in each edge label partition. Figure \ref{fig:dataformat}(e) and Algorithm \ref{algo:genmap} describe the workflow
-%of our VID mapping process. The core design of our VID mapping algorithm can be explained by answering three questions:
-%\begin{itemize}
-%  \item[\emph{Q1:}] \emph{How to decide which partition should be assigned with new contiguous VIDs first?}\\We choose the partition that contains the most vertices (line 3) because the more vertices it contains, the higher probability it will be accessed. Therefore, reducing the number of intervals for this partition can help reduce the memory access latency. Figure \ref{fig:dataformat}(e) shows that edge label partition 0 is selected because it contains the most vertices.
-%  \item[\emph{Q2:}] \emph{How to decide which vertices of the partition should be assigned with new contiguous VIDs first?}\\We first group vertices shared by the same partitions into the same sub-partitions (line 4). After that, we only need to choose the best suitable sub-partition instead of vertices because vertices in a sub-partition can be assigned in any order without affecting the final interval index. For example, the edge label partition 0 in Figure \ref{fig:dataformat}(e) is divided into four sub-partitions. For $subPart$ 1, we can also map old VIDs 10, 18, and 19 to 2, 3, and 1, respectively, and the final interval index will still be the same. Then, we choose the sub-partition shared by the most partitions and assign its vertices with new VIDs contiguously (lines 8-10). The reason is that this kind of sub-partition has the most relations with other sub-partitions, and thus we try to assign contiguous VIDs to vertices in these related sub-partitions to reduce the total number of intervals. For example, in Figure \ref{fig:dataformat}(e), $subParts$ 1 and 2 are the most related sub-partitions. Thus we assign vertices in both sub-partitions contiguously, and all edge label partitions that contain both sub-partitions can represent them with one interval index.
-%  \item[\emph{Q3:}] \emph{How to decide which sub-partition should be processed next?}\\One or more partitions share the same sub-partition, and we call these partitions the $shareSet$ of the sub-partition (line 6). We intersect the $shareSet$ of each sub-partition with that of the previously selected sub-partition, and choose the sub-partition that has the largest intersection set (lines 13-20). In this way, we can assign contiguous VIDs to sub-partitions that exist in most partitions to reduce the number of interval indexes.
-%\end{itemize}
-%
-%After replacing old VIDs with new VIDs, we build interval indexes, row offset, and column indexes for each edge label partition. Additionally, we group neighbors of each vertex by vertex labels and then sort neighbors in each group by their VIDs. To speed up the searching process of a VID, we load interval indexes of an edge label partition into GPU shared memory. In summary, our interval-PCSR is more space efficient than hash-PCSR in two aspects: (1) interval-PCSR does not need to store VIDs while hash-PCSR needs VIDs to evaluate whether the VID pointed by the hash index is the searching VID; (2) interval-PCSR has no empty entries while hash-PCSR uses 30 empty entries for each vertex to reduce collisions of the hash function.
-
-Figure \ref{} shows the storage size of \SystemName against the PCSR scheme used by GSI for a \FIXME{xx} graph. The \SystemName storage
-format reduces the storage size (and the GPU memory footprint) by \FIXME{xx\%}.
 
 \section{The Extension Phase\label{sec:extensionphase}}
-\begin{figure}
-\centering
-\includegraphics[width=0.9\columnwidth]{./figure/doubleext.eps}
-\caption{Examples of single-vertex extension and our double-vertex extension methods.}	
-\label{fig:doubleext}
-\end{figure}
-Previous works \cite{zeng2020gsi,sun2020subgraph} adopt the traditional single-vertex extension method when matching the query graph in a data graph. However, this method ignores some critical information of the query graph when extending partial embeddings. In Figure \ref{fig:doubleext}, the single-vertex extension method needs to write intermediate results after matching $u_2$ and read intermediate results before matching $u_3$. This procedure is time-consuming because both write and read operations need to access GPU global memory. In order to speed up the matching process, we propose the DV-ext method that can extend partial embeddings with two vertices in one step. Moreover, we extend our DV-ext method to make it applicable in four extension patterns shown in Figure \ref{fig:extpattern}.
-\begin{figure}
-\centering
-\includegraphics[width=0.9\columnwidth]{./figure/extpattern.eps}
-\caption{Illustration of SV- and DV-phase. $u_{s1}$ and $u_{s2}$ represent matched query vertices, and can be any vertex labels. $u_1$ and $u_2$ represent query vertices to be matched. The two edges in DV-phase mush have the same edge label since we load only one edge label partition each time.}	
-\label{fig:extpattern}
-\end{figure}
+Previous works \cite{zeng2020gsi,sun2020subgraph} adopt the traditional single-vertex extension (SV-ext) method when matching the query graph in a data graph. However, this method ignores some critical information of the query graph. The SV-ext method needs to write intermediate results after matching a query vertex and read the same intermediate results before matching the next query vertex. This procedure is time-consuming because both write and read operations need to access GPU global memory. In order to speed up the matching process, we propose N-vertex extension (NV-ext) method that can match as many vertices as possible in one step. Our NV-ext method can handle all extension patterns shown in Figure \ref{fig:extpattern}.
 
-The main problem of subgraph matching on GPU is that the number of partial embeddings generated by each warp is different, thus we need to find the write address of new partial embeddings for each warp to avoid write conflicts. To solve this problem, GSI \cite{zeng2020gsi} uses a Prealloc-Combine method, which needs two extra GPU kernels and access all partial embeddings twice to find the write address for each warp. Though Prealloc-Combine method is more efficient than GpSM \cite{tran2015fast} which generates partial embeddings twice, it still incurs high memory overhead. Different from GSI, we use $atomicAdd$ inside the GPU kernel to calculate write addresses. The main performance issue of $atomicAdd$ is the sequential execution when multiple warps update the same variable at the same time. But this is not a severe problem in subgraph matching because of the intrinsic irregularity of subgraph matching.
+The main problem of subgraph matching on GPU is that the number of embeddings generated by each warp is different, thus we need to find the write address of newly generated embeddings for each warp to avoid write conflicts. To solve this problem, GSI \cite{zeng2020gsi} uses a Prealloc-Combine method, which needs two extra GPU kernels and access all embeddings twice to find the write address for each warp. Though Prealloc-Combine method is more efficient than GpSM \cite{tran2015fast} which generates embeddings twice, it still incurs high memory overhead. Different from GSI, we use $atomicAdd$ inside the GPU kernel to calculate write addresses. The main performance issue of $atomicAdd$ is the sequential execution when multiple warps update the same variable at the same time. But this is not a severe problem in subgraph matching because of the intrinsic irregularity of subgraph matching.
 
-We now explain how to generate partial embeddings for these four extension patterns, as illustrated in Algorithm \ref{algo:extphase}. For each partial embedding (line 3), we first get source VIDs from the partial embedding according to the extension phase (line 4). Then, we search source VIDs in interval indexes and extract their neighbors (line 5).  Next, we remove invalid neighbors that have wrong vertex labels and do not satisfy restrictions. Finally, we use different algorithms to generate new embeddings for different extension patterns (lines 8-13).
+
+Algorithm \ref{algo:extphase} describes the overall workflow of the extension phase. For each embedding (line 3), we first obtain source VIDs from the embedding according to the extension pattern that the extension phase contains (line 4). Then, we search source VIDs in the interval-PCSR of the loaded edge label partition, and extract their neighbors (line 5).  Next, we remove invalid neighbors that have wrong vertex labels and do not satisfy restrictions. Finally, we use different algorithms to generate new embeddings for different extension patterns (lines 8-15). In the following of this section, we first describe embedding generation methods for extension patterns 2-4, then an optimized generation method for extension pattern 1, and finally generation methods of extension patterns 5-7 that are based on extension pattern 1. 
 
 \begin{algorithm}
-\KwIn{the edge label partition $elp$, partial embeddings $EMB$, the starting address of new embeddings $newEMB$, the extension phase $extPhase$}
-$count \leftarrow 0$\;
+\KwIn{the edge label partition $elp$, partial embeddings $EMB$, the starting address of new embeddings $newEMB$, the extension phase $extP$}
+$totNum \leftarrow 0$\;
 Load interval indexes of $elp$ into shared memory\;
 \ForEach{$emb \in EMB$}{
-	\tcp{For EPs 1 and 3, $u_{s1}=u_{s2}$}
-	Get source VIDs $u_{s1}$ and $u_{s2}$ from $emb$ according to $extPhase$\;
+	Get source VIDs $u_{s1}$ and $u_{s2}$ from $emb$\;
 	Search $u_{s1}$ and $u_{s2}$ in interval indexes and extract their neighbors $ne1$ and $ne2$, respectively.\;
 	Remove neighbors that do not have the same vertex labels as $u_{1}$ and $u_{2}$ from $ne1$ and $ne2$, respectively\;
 	Remove neighbors that do not satisfy the restrictions of $u_{1}$ and $u_{2}$ from $ne1$ and $ne2$, respectively\;
-	\If{$extPhase$ is EP 1}{
-		$\textsc{OptDouExt}(emb,ne1,count,newEMB)$\;
+	\If{$extP$ is extension pattern 0}{
+		We use the traditional SV-ext method to generate embeddings for $extP$\;
 	}
-	\ElseIf{$extPhase$ is one of EPs 2, 3, and 4}{
-		$\textsc{DouExt}(emb,ne1,ne2,count,newEMB)$\;
+	\ElseIf{$extP$ is extension pattern 1}{
+		$\textsc{OptDouExt}(emb,ne1,totNum,newEMB)$\;
 	}
-	\Else{
-		This is an extension phase that contains one vertex. We use the traditional method to generate embeddings for $extPhase$\;
+	\ElseIf{$extP$ is one of extension patterns 2, 3, and 4}{
+		$\textsc{DouExt}(emb,ne1,ne2,totNum,newEMB)$\;
+	}
+	\ElseIf{$extP$ is one of extension patterns 5, 6, and 7}{
+		$\textsc{NExt}(emb,ne1,ne2,totNum,newEMB,extP)$\;
 	}
 }
 
@@ -232,7 +166,7 @@ Load interval indexes of $elp$ into shared memory\;
 \label{algo:extphase}
 \end{algorithm}
 
-For extension patterns 2-4, we devise a direct method, Algorithm \ref{algo:generalDV}, to generate new embeddings. The main idea of Algorithm \ref{algo:generalDV} is to iterate over all combinations of candidates of $u_{1}$ and $u_{2}$, denoted as $C_1$ and $C_2$ respectively, and construct new embeddings by appending each valid combination to a new copy of the current embedding $emb$. We say a combination is valid, if neither VIDs in the combination equals to VIDs in $emb$. To avoid checking this condition repeatedly, we first check this condition for all vertices in $C_2$ once (lines 3-4) and record indexes of vertices whose VIDs also exist in $emb$ (line 5). To fully utilize $C_2$, we generate new embeddings while checking the condition. Once a vertex in $C_2$ is checked valid (lines 6-7), we assign this vertex and the first valid vertex in $C_1$ to $u_2$ and $u_1$, respectively (lines 1,8). Then, we write the new partial embedding $(emb,u_1,u_2)$ to the corresponding address (lines 9-10).
+For extension patterns 2-4, we devise a direct method, Algorithm \ref{algo:generalDV}, to generate new embeddings. The main idea of Algorithm \ref{algo:generalDV} is to iterate over all combinations of candidates of $u_{1}$ and $u_{2}$, denoted as $C_1$ and $C_2$ respectively, and construct new embeddings by appending each valid combination to a new copy of the current embedding $emb$. We say a combination is valid, if neither VIDs in the combination equal to VIDs in $emb$. To avoid checking this condition repeatedly, we first check this condition for all vertices in $C_2$ once (lines 3-4) and record indexes of vertices whose VIDs also exist in $emb$ (line 5). To fully utilize $C_2$, we generate new embeddings while checking the condition. Once a vertex in $C_2$ is checked valid (lines 6-7), we assign this vertex and the first valid vertex in $C_1$ to $u_2$ and $u_1$, respectively (lines 1,8). Then, we write the new embedding $(emb,u_1,u_2)$ to the corresponding address (lines 9-10).
 
 \begin{algorithm}
 	\KwIn{the partial embedding $emb$, candidates of $u_1$ $C_1$, candidates of $u_2$ $C_2$, the number of newly written embeddings $totNum$, the starting address of new embeddings $newEMB$}
@@ -269,9 +203,9 @@ For extension patterns 2-4, we devise a direct method, Algorithm \ref{algo:gener
 	\label{algo:generalDV}
 \end{algorithm}
 
-At the beginning of Algorithm \ref{algo:generalDV}, we allocate space for new partial embeddings generated when checking conditions for $C_2$ (line 2). Since we do not know the number of valid vertices in $C_2$ until all vertices are checked, we use the vertex count of $C_2$, denoted as $C_{2}.size$, to overestimate the number of new partial embeddings. If there are invalid vertices in $C_2$, we assign 0 to $u_1$ and $u_2$ to indicate invalid partial embeddings (line 6). When a GPU kernel read a partial embedding that contains 0, it skips this partial embedding.
+At the beginning of Algorithm \ref{algo:generalDV}, we allocate space for new embeddings generated when checking conditions for $C_2$ (line 2). Since we do not know the number of valid vertices in $C_2$ until all vertices are checked, we use the vertex count of $C_2$, denoted as $C_{2}.size$, to overestimate the number of new embeddings. If there are invalid vertices in $C_2$, we assign 0 to $u_1$ and $u_2$ to indicate invalid embeddings (line 6). When a GPU kernel read an embedding that contains 0, it skips processing it.
 
-In Algorithm \ref{algo:generalDV}, after finding invalid vertices in $C_2$, we generate new partial embeddings for rest vertices in $C_1$ (lines 11-12). In each iteration, we load 32 vertices in $C_1$ into shared memory $tmp$ and remove invalid ones from $tmp$ (lines 13-14). In order to allocate space for new partial embeddings, we estimate its count as the number of combinations of $tmp$ and valid vertices in $C_2$ (line 15). Then, we generate new partial embeddings for these combinations (line 16). As $u_1$ and $u_2$ have the same vertex label in extension pattern 2, there is a chance that two candidates of $u_1$ and $u_2$ are equal (line 17), which makes the generated partial embedding invalid. Next, we assign 0 to $u_1$ and $u_2$ if the partial embedding is invalid (line18), otherwise assign corresponding candidates to $u_1$ and $u_2$ (line 20). Finally, write the new partial embedding to the specified address (lines 21-22).
+In Algorithm \ref{algo:generalDV}, after finding invalid vertices in $C_2$, we generate new embeddings for rest vertices in $C_1$ (lines 11-12). In each iteration, we load 32 vertices in $C_1$ into shared memory $tmp$ and remove invalid ones from $tmp$ (lines 13-14). In order to allocate space for new embeddings, we estimate its count as the number of combinations of $tmp$ and valid vertices in $C_2$ (line 15). Then, we generate new embeddings for these combinations (line 16). As $u_1$ and $u_2$ have the same vertex label in extension pattern 2, there is a chance that two candidates of $u_1$ and $u_2$ are equal (line 17), which makes the generated new embedding invalid. To solve the problem, we assign 0 to $u_1$ and $u_2$ if the partial embedding is invalid (line 18), otherwise assign corresponding candidates to $u_1$ and $u_2$ (line 20). Finally, write the new embedding to the specified address (lines 21-22).
 
 However, Algorithm \ref{algo:generalDV} is not appropriate for extension pattern 1. In extension pattern 1, $u_1$ and $u_2$ are extended from the same source vertex $u_{s1}$ and have the same vertex label, thus $C_1 = C_2$. If Algorithm \ref{algo:generalDV} is applied to extension pattern 1, each vertex in $C_2$ can be accessed by up to $C_1.size$ times. As shown in the left part of Figure \ref{fig:ep1opt}, element 1 is accessed at each iteration of $i$. If $C_1.size>32$, we need to reload element 1 from global memory each time we access it. Other elements also encounter the same problem.
 
@@ -297,12 +231,38 @@ To speed up the matching process of extension pattern 1, we rearrange the genera
 	\label{algo:optDV}
 \end{algorithm}
 
-\section{The Elimination Phase\label{sec:eliphase}}  GSI \cite{zeng2020gsi} matches only one query edge in a GPU kernel and Lai et al.
-\cite{lai2015scalable} matches at most two query edges at each iteration. Both methods can not fully utilize the elimination power of
-backward edges. In our approach, we match as many backward edges as possible to eliminate invalid partial embeddings at early stages.
-Algorithm \ref{algo:eliphase} demonstrates how our approach deals with the eliminate phase. For each partial embedding $emb$ (line 2), we
-first check if all query edges in the elimination phase can be matched in $emb$ (line 4). If so (line 5), we write $emb$ to the shared
-memory $tmp$ (line 6) and write $tmp$ to global memory if it is full (lines 7-9).
+\begin{algorithm}
+	\KwIn{the partial embedding $emb$, candidates of \{$u_1, \cdots, u_n$\} $C_1$, candidates of \{$u_{n+1}, \cdots, u_{n+m}$\} $C_2$, the number of newly written embeddings $totNum$, the starting address of new embeddings $newEMB$, extension phase $extP$}
+	\If{$extP$ is extension pattern 5}{
+		\ForEach{$comb1$ of combinations of $u_1, \cdots, u_{n-2}$}{
+			$emb_{copy} \leftarrow (emb, comb1)$; $C_{copy} \leftarrow C_1/comb1$\;
+			$\textsc{OptDouExt}(emb_{copy},C_{copy},totNum,newEMB)$\;
+		}
+	}
+	\ElseIf{$extP$ is one of extension patterns 6 and 7}{
+		\ForEach{$comb2$ of combinations of $u_{n+1}, \cdots, u_{n+m}$}{
+			\ForEach{$comb1$ of combinations of $u_1, \cdots, u_{n-2}$}{
+				$emb_{copy} \leftarrow (emb, comb1, comb2)$; $C_{copy} \leftarrow C_1/comb1$\;
+				$\textsc{OptDouExt}(emb_{copy},C_{copy},totNum,newEMB)$\;
+			}
+		}
+	}
+	\caption{\textsc{NExt}}
+	\label{algo:nvext}
+\end{algorithm}
+
+\RV{In order to implement NV-ext method, we design Algorithm \ref{algo:nvext} to generate embeddings for extension patterns 5-7 based on Algorithm \ref{algo:optDV}. For extension pattern 5 (line 1), we iterate over all combinations of $u_1, \cdots, u_{n-2}$ (line 2) and use Algorithm \ref{algo:optDV} to match last two query vertices $u_{n-1}$ and $u_n$ (line 4). Before invoking Algorithm \ref{algo:optDV}, we need to construct a new partial embedding and new candidates for $u_{n-1}$ and $u_n$ (line 3). For extension patterns 6 and 7, we first use an outer loop to iterate over all combinations of $u_{n+1}, \cdots, u_{n+m}$, and use the same method as extension pattern 5 to generate embeddings (lines 7-9).}
+
+\RV{When decomposing the query graph into extension and elimination phases, there is a possibility that multiple extension patterns are available for an extension phase (described in Section \ref{sec:matchingorder}). To choose the most suitable extension pattern, we assign 2-level priorities to extension patterns. In the first level, we prioritize extension patterns based on the number of query vertices to be matched in each extension pattern. Thus, extension patterns 5-7 get the highest priority, 1-4 get the medium priority, and 0 gets the lowest priority. In the second level, we prioritize extension patterns that posses the same first level priority based on efficiency of each extension pattern when generating embeddings.} 
+
+\RV{We first analyze the efficiency of medium priority extension patterns, and then the highest priority ones. Extension pattern 1 uses an optimized method (Algorithm \ref{algo:optDV}) to generate embeddings, thus it is most efficient among extension patterns 1-4. Extension patterns 2-4 use the normal method (Algorithm \ref{algo:generalDV}) but extension pattern 2 needs to evaluate the equality of candidates of $u_1$ and $u_2$. Therefore, extension pattern 2 is the least efficient one. Compared to extension pattern 3, extension pattern 4 needs one more step to find the address of $u_{s2}$, thus it is less efficient than extension pattern 3. Consequently, the priority order of extension patterns 1-4 from the highest to the lowest is extension pattern 1, 3, 4, and 2.}
+
+\RV{Among extension patterns of the highest priority, extension pattern 5 is the most efficient one because it only needs one step to find the neighbor address of $u_{s1}$ in the edge label partition and another step to find the address of neighbors that have the same vertex label as $u_1, \cdots, u_n$. In contrast, extension pattern 7 is the least efficient one because it needs one more step to find  the neighbor address of $u_{s2}$ compared to extension pattern 5. Consequently, the priority order of extension patterns 5-7 from the highest to the lowest is extension pattern 5, 6, and 7.}
+
+\section{The Elimination Phase\label{sec:eliphase}}
+GSI \cite{zeng2020gsi} matches only one query edge in a GPU kernel and Lai et al. \cite{lai2015scalable} matches at most two query edges at each iteration. Both methods can not fully utilize the elimination power of backward edges. In our approach, we match as many backward edges as possible to eliminate invalid embeddings at early stages. Algorithm \ref{algo:eliphase} demonstrates how our approach deals with the eliminate phase. For each partial embedding $emb$ (line 2), we first check if all query edges in the elimination phase can be matched in $emb$ (line 4). If so (line 5), we write $emb$ to the shared memory $tmp$ (line 6) and write $tmp$ to global memory if it is full (lines 7-9).
+
+
 \begin{algorithm}
 \KwIn{the edge label partition $elp$, partial embeddings $EMB$, the number of generted embeddings $totNum$, the elimination phase $eliPhase$}
 Load interval indexes of $elp$ into shared memory\;
@@ -324,68 +284,59 @@ Load interval indexes of $elp$ into shared memory\;
 
 
 
-\section{Matching Order\label{sec:matchingorder}} Many previous researches \cite{bi2016efficient,sun2020subgraph,sun2020rapidmatch,guo2020gpu} have explored how to
-generate an effective matching order to speed up the matching process. However, all of these methods are designed for single-vertex
-extension subgraph matching and not suitable for our DV-ext method. In this work, we propose a matching order generation algorithm based on
-the structural information of the query graph. The key idea of our algorithm is to match all available backward edges in the query graph as
-soon as possible to eliminate invalid partial embeddings at early stages. If no backward edges are available, we extend the partial query
-graph by one or two vertices. Algorithm \ref{algo:genmatchorder} demonstrates our matching order generation algorithm.
-%When extending an edge that connects two matched query vertices, we can add a restriction on two matched query vertices, which is that the neighbors of one vertex must contain the other vertex. Thus, we can guarantee that the number of generated embeddings is less than or equal to the number of previous embeddings. Based on this observation,
 
-At the beginning of Algorithm \ref{algo:genmatchorder}, we adopt methods proposed in \cite{shi2020graphpi,mawhirter2019graphzero} to generate restrictions on VIDs in partial embeddings (line 1). Thus, we can avoid generating invalid partial embeddings. The initial query phase is slightly different from the normal extension phase. In the initial phase, we match up to three query vertices in one GPU kernel, thus restricting the type of the initial phase to extension patterns 1 and 3 which have only one source vertex (lines 2-4). Different from the normal extension phase that fetches source vertices from partial embeddings, the initial phase fetches the source vertex from the edge label partition. Except for the differences, the initial phase uses the same method as the extension phase to generate partial embeddings based on the extension pattern. If no extension patterns are available for the initial phase, we choose the SV-phase that has the most neighbors (lines 5-8).
+\section{Matching Order\label{sec:matchingorder}}
 
-After generating the initial phase, we iteratively construct query phases for the rest vertices and edges in $q$ (line 10). First, we find all backward edges (line 11) and group them by the edge label (line 12). For each group, we construct an elimination phase (lines 13-15). If no backward edges are found, we search for two unmatched query vertices that can form one of extension patterns 1-4 (line 16). Since more than one extension patterns may be found, we assign each extension pattern a priority and choose the extension pattern with the highest priority.
-\begin{itemize}
-  \item Assign the first priority to extension pattern 1. As $u_1$ and $u_2$ in extension 1 have the same vertex label and source vertex, candidate sets of both vertices are equal. Therefore we can generate new embeddings of extension pattern 1 efficiently with Algorithm \ref{algo:optDV}.
-  \item Assign the second priority to extension pattern 3. The candidate sets of $u_1$ and $u_2$ in extension pattern 3 are different but all belong to the neighbors of the same source vertex. Therefore, we only need to find the address of neighbors of the source vertex once and then find addresses of two vertex labels.
-  \item Assign the third priority to extension pattern 4. We need to find addresses of neighbors of two source vertices and then find addresses of two vertex labels in the corresponding neighbors. Moreover, the vertex labels of $u_1$ and $u_2$ are different, this pattern will not generate invalid embeddings.
-  \item Assign the fourth priority to extension pattern 2. We need to find addresses of neighbors of two source vertices and then find addresses of two vertex labels in the corresponding neighbors. As the vertex labels of $u_1$ and $u_2$ are the same, there may be same vertices in both candidate sets which can lead to invalid embeddings.
-\end{itemize}
+\RV{In this section, we first give a brief description of matching order generation method used in \cite{bi2016efficient}, and then demonstrate the details of our matching order generation algorithm based on NV-ext method.}
 
- The main issue is that there may be more than one pairs of $u_1$ and $u_2$ can form the same extension pattern with the highest priority (line 17). In our approach, we choose the pair that has the most unmatched neighbors in the query graph (line 18). In this way we increase the chance to find backward edges and high priority extension patterns when constructing the next query phase.
- %Methods proposed in \cite{guo2020gpu, shi2020graphpi,bi2016efficient} use data graph information to assist the matching order generation. We leave this method for our future work.
- If no extension patterns are found, we just select the SV-phase with the most unmatched neighbors in the query graph (lines 22-26).
+\RV{The main goal of \cite{bi2016efficient} is to match backward edges as soon as possible to eliminate invalid embeddings at early stages. Therefore, they generate a subgraph of $q$ that contains all backward edges regarding any spanning tree of $q$ by iteratively removing all degree-one vertices from $q$. The generated subgraph, which is called the core structure as shown in Figure \ref{fig:overview}, is matched first. In our approach, we also match the core structure first, and then the trees}.
+
+\RV{When decomposing the core structure into extension and elimination phases, we need to adhere to an important constraint, which is that only extension patterns 0-4 can be used to decompose the core structure. The reason is explained as follows. In order to eliminate invalid embeddings as soon as possible, we need to first match circles in the core structure, which are \{$u_0$, $u_1$, $u_2$\} and \{$u_2$, $u_3$, $u_4$, $u_5$\} in Figure \ref{fig:overview}. Therefore, we only need to extend at most two vertices when matching a circle because vertices in a circle have exactly two neighbors. Figure \ref{fig:overview} demonstrates that the core structure is decomposed with extension patterns 0-4. We can see in the core structure that $u_0$, $u_1$, $u_2$, $u_4$, and $u_5$ can be matched with extension pattern 5 where $u_2$ is the source vertex. If we first decompose the core structure with extension pattern 5, and then the backward edge $(u_0, u_1)$, a large number of invalid embeddings may be generated after matching the extension pattern 5, which significantly slows down the matching performance. After matching the core structure, we can use any appropriate extension patters to match trees. For example, extension pattern 5 can be used to match the tree in Figure \ref{fig:overview}.}
+
+
+\RV{Based on \cite{bi2016efficient} and our NV-ext method, we design Algorithm \ref{algo:genmatchorder} to generate matching order of extension and elimination phases. At the beginning of Algorithm \ref{algo:genmatchorder}, we adopt methods proposed in \cite{shi2020graphpi,mawhirter2019graphzero} to generate restrictions on VIDs in embeddings (line 1). Thus, we can avoid generating invalid embeddings. Then we generate the core structure of $q$ by iteratively removing degree-one vertices from $q$, and construct trees of $q$ using removed vertices (line 2).}
+
+\RV{In order to match the core structure, we first find the smallest circle in the core structure (line 3), and then select vertices in the circle that conform to the highest priority extension pattern among extension patterns 0, 1, and 3 (line 4). The selected vertices constitute the initial phase (lines 5-6), which is a special kind of extension phase. Different from the normal extension phase that fetches source vertices from embeddings, the initial phase fetches the source vertex from the edge label partition. After generating the initial phase, we iteratively find vertices in the circle that conform to extension patterns 0-4 and choose the one with the highest priority (lines 7-9). Finally, we use the backward edge in the circle to construct an elimination phase (line 10).}
+
+\RV{After decomposing the smallest circle, we iteratively construct extension and elimination phases for the rest vertices and edges in the core structure (line 11). First, we find all backward edges and group them by the edge label (lines 12-13). For each group, we construct an elimination phase (lines 14-15). If no backward edges are found, we search for unmatched vertices in the core structure that can form one of extension patterns 0-4, and choose the one with the highest priority (lines 16-18).}
+
+\RV{After matching the core structure, we can use any appropriate one of extension patterns 0-7 to match rest vertices that are not in the core structure since there is no backward edge left. At each iteration, we find vertices that can form extension patterns 0-7 and select the one with the highest priority (lines 19-21).}
+
 
 \begin{algorithm}
 	\KwIn{the query graph $q$}
 	\KwOut{the match phase queue $matchPhase$}
 	Generate restrictions to eliminate automorphisms\;
-	\If{there exists EP 1 or EP 3 in $q$}{
-		Construct an initial phase $initPhase$ with the founded EP\;
-		$matchPhase.append(initPhase)$\;
+	Generate the core structure $C$ and trees $T$ of $q$\;
+	Find the smallest circle $minc$ in $C$\;
+	Select vertices in $minc$ that conform to extension patterns 0, 1, and 3, and choose the highest priority extension pattern\;
+	Construct the initial phase with vertices corresponding to the selected extension pattern\;
+	Add the initial phase to $matchPhase$\;
+	\For{vertices in $minc$ that conform to extension patterns 0-4}{
+		Choose the highest priority extension pattern and construct an extension phase\;
+		Add the extension phase to $matchPhase$\;
 	}
-	\Else{
-		Find a pair of connected vertices that have the most neighbors in $q$\;
-		Construct an initial phase $initPhase$ with the founded pair\;
-		$matchPhase.append(initPhase)$\;
-	}
-	Delete added vertices from $q$\;
-	\While{$q \neq \emptyset$}{
+	Construct an elimination phase with the backward edge in $minc$ and add it to $matchPhase$\;
+	\For{rest vertices and edges in $C$}{
 		\If{there are backward edges}{
-			Group all backward edges by the edge label, denoted as $G$\;
-			\ForEach{$g \in G$}{
-				Construct an elimination phase $eliPhase$ based on $g$\;
-				$matchPhase.append(eliPhase)$\;
+			Group all backward edges by the edge label\;
+			\ForEach{group $g$}{
+				Construct an elimination phase $eliPhase$ based on $g$ and add it to $matchPhase$\;
 			}	
 		}
-		\ElseIf{there are pairs of unmatched vertices can form one of EPs 1-4}{
-			Choose the pairs whose corresponding EP has the highest priority\;
-			In the chosen pairs, choose the pair that has the most neighbors\;
-			Construct an extension phase $extPhase$ with the chosen pair\;
-			$matchPhase.append(extPhase)$\;
-			Delete added vertices from $q$\;
-		}
 		\Else{
-			Find a pair of connected vertices that have the most neighbors in $q$\;
-			Construct an extension phase $extPhase$ with the founded pair\;
-			$matchPhase.append(extPhase)$\;
-			Delete added vertices from $q$\;
+			Find vertices that conform to extension patterns 0-4 and choose the one with the highest priority\;
+			Construct an extension phase and add it to $matchPhase$\;
 		}
 	}
-	
+	\For{vertices in $T$}{
+		Find vertices that can form extension patterns 0-7 and select the one with the highest priority\;
+		Construct an extension phase and add it to $matchPhase$\;
+	}
 	\caption{genMatchOrder}
 	\label{algo:genmatchorder}
 \end{algorithm}
+
 
 \section{Load Balance} In GPU, once a thread block is scheduled to run on an SM, it will not be scheduled out until all warps in this
 thread block are finished. Therefore, if one warp matches a vertex or an edge that has many candidates, all warps in the same thread block
@@ -395,3 +346,4 @@ warps, which means the maximum concurrent warps are generated and will not be sc
 In this way, a warp with small workload can match next embedding without waiting for other warps. Only when there is no embeddings left,
 the faster warps have to wait for the slower warps. Our approach is simple yet effective, it can mitigate load imbalance to some extend. A
 more powerful load balance scheme can be designed and we leave this for a future study.
+

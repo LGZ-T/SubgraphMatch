@@ -1,6 +1,6 @@
 \section{Background}
 
-\subsection{Preliminaries}
+\subsection{Preliminaries\label{sec:pre}}
 Given two graphs $q$ and $G$, the task of subgraph search is to determine if the larger graph $G$ contains a subgraph that is isomorphic
 to the query graph $q$. If the query and data graphs include vertex and edge labels, both the topology and the labels should be matched. The large graph $G$ is known as a data or target graph.  Subgraph search is to find all subgraphs  of the data graph, which are isomorphic to the query graph.
 
@@ -35,9 +35,10 @@ match $u_1$ with vertex $v_4$ rather than $v_3$ from the data graph) is chosen f
 \cite{shi2020graphpi} and GraphZero \cite{mawhirter2019graphzero}, and \SystemName also adopts this common practice.
 
 \subsection{GPU Architecture}
-GPUs are general-purpose massively parallel computing devices. They are widely used to accelerate graph processing tasks, including subgraph matching \cite{zeng2020gsi,guo2020exploiting,guo2020gpu}. GPU processing units can be abstracted into a two-level hierarchy, the Streaming Multiprocessors (SMs)
-and computing cores inside the SM. An SM is further divided into processing blocks. Each processing block contains a fixed number of
-threads, called a warp that is the basic scheduling unit.
+GPUs are massively parallel computing devices. They are widely used to accelerate graph processing tasks, including subgraph matching
+\cite{zeng2020gsi,guo2020exploiting,guo2020gpu}. GPU processing units can be abstracted into a two-level hierarchy, the Streaming
+Multiprocessors (SMs) and computing cores inside the SM. An SM is further divided into processing blocks. Each processing block contains a
+fixed number of threads, called a warp that is the basic scheduling unit.
 
 Modern GPUs also organize their memory into a hierarchical system, containing the global memory, a configurable shared memory, registers,
 and potentially an L2 cache between the global memory and the shared memory. The thread-local registers are the fastest memory component,
@@ -48,5 +49,3 @@ global memory provides the largest memory storage capacity on the GPU but has th
 The NVIDIA CUDA programming model provides atomic functions to perform a read-modify-write atomic operation on one 32-bit or 64-bit word
 residing in global or shared memory. In this work, we use the CUDA $atomicAdd$ function. This function reads a variable in global memory
 before adding a number to it and then writes the result back to the same address.
-
-

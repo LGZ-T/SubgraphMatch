@@ -34,7 +34,7 @@ by GraphPi and GraphZero, which chooses an embedding where the data graph candid
 match $u_1$ with vertex $v_4$ rather than $v_3$ from the data graph) is chosen for a query graph vertex. This is a scheme used by GraphPi
 \cite{shi2020graphpi} and GraphZero \cite{mawhirter2019graphzero}, and \SystemName also adopts this common practice.
 
-\subsection{GPU Architecture}
+\subsection{GPU Architecture\label{sec:gpu}}
 GPUs are massively parallel computing devices. They are widely used to accelerate graph processing tasks, including subgraph matching
 \cite{zeng2020gsi,guo2020exploiting,guo2020gpu}. GPU processing units can be abstracted into a two-level hierarchy, the Streaming
 Multiprocessors (SMs) and computing cores inside the SM. An SM is further divided into processing blocks. Each processing block contains a

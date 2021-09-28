@@ -19,7 +19,8 @@ unprocessed vertices from the matching order $\pi$ to perform subgraph search. B
 only apply a sub-query graph. The subgraphs of $G$ that are isomorphic to the query graph or sub-query graph are called embeddings.
 
 \cparagraph{Backward edge.} Given a query graph $q$ and a subgraph $q'$ of $q$, if an edge $e$ exists in $q$ but not in subgraph $q'$ and
-$e$ connects two vertices of $q'$, we call $e$ the backward edge.
+$e$ connects two vertices of $q'$, we call $e$ the backward edge. \SystemName uses the backward edges to remove invalid graph embeddings,
+e.g. subgraphs whose topology or vertex or edge labels do not match the query graph, $q$.  (see Section \ref{sec:eliphase}).
 
 \begin{figure}[t!]
 \centering

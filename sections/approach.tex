@@ -143,7 +143,8 @@ format reduces the storage size (and the GPU memory footprint) by 83\%.
 \section{Extension and Elimination\label{sec:extensionphase}}
 Like mainstream graph matching frameworks \cite{tran2015fast, zeng2020gsi}, \SystemName applies a two-step approach to perform graph
 search. In the extension phase, \SystemName matches graph vertices and edge labels between the query and the data graph to generate graph
-embeddings (i.e., matched subgraphs). In the elimination phase, we remove graph embeddings that do not satisfy the pre-defined constraints.
+embeddings (i.e., matched subgraphs). In the elimination phase, we remove graph embeddings that do not satisfy the pre-defined constraints
+e.g., with duplicate vertices. 
 
 \subsection{The Extension Phase}
 

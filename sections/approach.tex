@@ -144,7 +144,7 @@ format reduces the storage size (and the GPU memory footprint) by 83\%.
 Like mainstream graph matching frameworks \cite{tran2015fast, zeng2020gsi}, \SystemName applies a two-step approach to perform graph
 search. In the extension phase, \SystemName matches graph vertices and edge labels between the query and the data graph to generate graph
 embeddings (i.e., matched subgraphs). In the elimination phase, we remove graph embeddings that do not satisfy the pre-defined constraints
-e.g., with duplicate vertices. 
+e.g., with duplicate vertices.
 
 \subsection{The Extension Phase}
 
@@ -285,7 +285,7 @@ To speed up the matching process of the matching pattern 1, we rearrange the gen
 	\label{algo:optDV}
 \end{algorithm}
 
-\begin{algorithm}
+\begin{algorithm}[t!]
 	\KwIn{embeddings $emb$, candidates of \{$u_1, \cdots, u_n$\} $C_1$, candidates of \{$u_{n+1}, \cdots, u_{n+m}$\} $C_2$, the number of newly written embeddings $totNum$, the starting address of new embeddings $newEMB$, extension phase $extP$}
 	\If{$extP$ is matching pattern 5}{
 		\ForEach{$comb1$ of combinations of $u_1, \cdots, u_{n-2}$}{

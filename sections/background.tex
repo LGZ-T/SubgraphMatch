@@ -1,8 +1,10 @@
 \section{Background}
 
 \subsection{Preliminaries\label{sec:pre}}
-Given two graphs $q$ and $G$, the task of subgraph search is to determine if the larger graph $G$ contains a subgraph that is isomorphic
-to the query graph $q$. If the query and data graphs include vertex and edge labels, both the topology and the labels should be matched. The large graph $G$ is known as a data or target graph.  Subgraph search is to find all subgraphs  of the data graph, which are isomorphic to the query graph.
+Given two graphs $q$ and $G$, the task of subgraph matching is to determine if the larger graph $G$ contains a subgraph that is isomorphic
+to the query graph $q$. If the query and data graphs include vertex and edge labels, both the topology and the labels should be matched.
+The large graph $G$ is known as a data or target graph.  Subgraph search is to find all subgraphs  of the data graph, which are isomorphic
+to the query graph.
 
 In this work, we target mining subgraphs from an \emph{undirected} and \emph{labeled} data graph $G=\{V,E,\Sigma,L_V,L_E\}$, where $V$, $E$
 and $\Sigma$ are a set of vertices, edges and labels respectively,  $L_V$ is a function that associates a vertex $v \in V$ with a label
@@ -14,9 +16,14 @@ counterparts from the data graph $G$. Studies have shown that choosing the right
 performance \cite{bi2016efficient,sun2020subgraph,sun2020rapidmatch,guo2020gpu}.  \SystemName provides a dedicated algorithm to generate
 the matching order; see Section \ref {sec:matchingorder}.
 
-\cparagraph{Embedding.} Given a query graph $q$ and a matching order $\pi$, \SystemName iteratively chooses  one or multiple
-unprocessed vertices from the matching order $\pi$ to perform subgraph search. Before we match the last vertex in the matching order, we
-only apply a sub-query graph. The subgraphs of $G$ that are isomorphic to the query graph or sub-query graph are called embeddings.
+\cparagraph{Embedding.} Given a query graph $q$ and a matching order $\pi$, \SystemName iteratively chooses  one or multiple unprocessed
+vertices from the matching order $\pi$ to perform subgraph search. Before we match the last vertex in the matching order, we only apply a
+sub-query graph. The subgraphs of $G$ that are isomorphic to the query graph or sub-query graph are called subgraph isomorphic embeddings.
+A full subgraph isomorphic embedding is obtained if every vertex in the query graph $q$ is mapped to a vertex in the data graph $G$. For
+example, for the query graph $q$ in Figure \FIXME{xxa} and the data graph $G$ in Figure \FIXME{xxb}, there are three subgraph isomorphic
+embeddings of $q$ in $G$, which maps $(u1, u2, u3, u4, u5)$ to $(v0, v2, v1, v5, v4)$, $(v0, v2, v1, v5, v6)$ and $(v0, v2, v3, v5, v6)$,
+respectively. For simplicity, we use the term ``\emph{embedding}"\footnote{Not to confuse with the term embeddings (e.g., a vector of
+numerical values) used by deep neural networks.} to refer to ``subgraph isomorphic embedding" thereafter.
 
 \cparagraph{Backward edge.} Given a query graph $q$ and a subgraph $q'$ of $q$, if an edge $e$ exists in $q$ but not in subgraph $q'$ and
 $e$ connects two vertices of $q'$, we call $e$ the backward edge. \SystemName uses the backward edges to remove invalid graph embeddings,

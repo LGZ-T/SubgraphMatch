@@ -222,7 +222,7 @@ utilize $C_2$, we generate new embeddings while checking the condition. Once a v
 assign this vertex and the first valid vertex in $C_1$ to $u_2$ and $u_1$, respectively (lines 1,8). Then, we write the new embedding
 $(emb,u_1,u_2)$ to the corresponding address (lines 9-10).
 
-\begin{algorithm}
+\begin{algorithm}[t!]
 	\KwIn{the partial embedding $emb$, candidates of $u_1$ $C_1$, candidates of $u_2$ $C_2$, the number of newly written embeddings $totNum$, the starting address of new embeddings $newEMB$}
 	Find the index $i$ of the first valid vertex in $ne1$\;
 	$writePos \leftarrow atomicAdd(totNum,1 \times C_{2}.size)$\;
@@ -313,15 +313,20 @@ We first analyze the efficiency of medium priority matching patterns, and then t
 
 Among matching patterns of the highest priority, the matching pattern 5 is the most efficient one because it only needs one step to find the neighbor address of $u_{s1}$ in the edge label partition and another step to find the address of neighbors that have the same vertex label as $u_1, \cdots, u_n$. In contrast, the matching pattern 7 is the least efficient one because it needs one more step to find the neighbor address of $u_{s2}$ compared to the matching pattern 5. Consequently, the priority order of matching patterns 5-7 from the highest to the lowest is matching pattern 5, 6, and 7.
 
-\subsection{The Elimination Phase\label{sec:eliphase}} GSI \cite{zeng2020gsi} matches only one query edge in a GPU kernel and Lai et al.
-\cite{lai2015scalable} matches at most two query edges at each iteration. Both methods can not fully utilize the elimination power of
-backward edges. In our approach, we match as many backward edges as possible to eliminate invalid embeddings at early stages. Algorithm
-\ref{algo:eliphase} demonstrates how our approach deals with the eliminate phase. For each embedding $emb$ (line 2), we first check if all
-query edges in the elimination phase can be matched in $emb$ (line 4). If so (line 5), we write $emb$ to the shared memory $tmp$ (line 6)
-and write $tmp$ to global memory if it is full (lines 7-9).
+\subsection{The Elimination Phase\label{sec:eliphase}}
+Subgraph matching needs to find all subgraph isomorphic embeddings of the query graph in the data graph. However, the extension phase may
+generate some illegible embeddings, e.g., embedding with duplicate vertices. \SystemName removes these illegible embeddings in the
+elimination stage.
 
 
-\begin{algorithm}
+GSI \cite{zeng2020gsi} matches only one query edge in a GPU kernel and Lai et al. \cite{lai2015scalable} matches at most two query edges at
+each iteration. Both methods can not fully utilize the elimination power of backward edges. In our approach, we match as many backward
+edges as possible to eliminate invalid embeddings at early stages. Algorithm \ref{algo:eliphase} demonstrates how our approach deals with
+the eliminate phase. For each embedding $emb$ (line 2), we first check if all query edges in the elimination phase can be matched in $emb$
+(line 4). If so (line 5), we write $emb$ to the shared memory $tmp$ (line 6) and write $tmp$ to global memory if it is full (lines 7-9).
+
+
+\begin{algorithm}[t!]
 \KwIn{the edge label partition $elp$, embeddings $EMB$, the number of generted embeddings $totNum$, the elimination phase $eliPhase$}
 Load interval indexes of $elp$ into shared memory\;
 \ForEach{$emb \in EMB$}{

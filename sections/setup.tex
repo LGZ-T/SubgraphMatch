@@ -1,0 +1,45 @@
+\section{Experimental Setup}
+
+\subsection{Hardware and Workloads}
+
+\begin{table} [t!]
+\centering
+  \caption{Data graphs.}
+  \label{tab:datagraph}
+  \small
+  \begin{tabular}{llllll}
+  \toprule
+    \textbf{Type of sizes}&\textbf{Graph Name} &$|V|$&$|E|$&$|L_V|$&$|L_E|$\\
+    \midrule
+    Tiny	&Enron		&36K	&183K	&3	&3 \\
+    Tiny	&FirstMM 	&56K	&126K	&3	&3 \\
+    Small	&DD			&0.3M	&0.8M	&5	&5\\
+    Small	&Gowalla	&0.2M	&0.9M	&5	&5\\
+    Medium	&Patents	&3.7M	&16M	&7	&7\\
+    Medium	&Reddit		&4.6M	&5.5M	&7	&7\\
+    Large	&Orkut		&3M		&117M	&12	&12\\
+	Large	&sinaweibo	&58M	&261M	&12	&12\\
+
+    \bottomrule
+  \end{tabular}
+\end{table}
+\cparagraph{Experimental platform.} We evaluate our approach on a multi-core workstation with an NVIDIA RTX2080Ti GPU. The server has a
+12-core Intel Xeon E5-2697 CPU at 2.3 GHz and 256 GB of RAM. The GPU has 11 GB of memory and 68 SMs where each SM has 4350 CUDA cores and
+64KB of shared memory
+
+\cparagraph{Data graphs.} We use eight real-world data graphs in our experiment. The size of the graphs ranges from tiny to large, as
+illustrated in Table \ref{tab:datagraph}. Graphs Enron \cite{leskovec2009community}, Gowalla \cite{cho2011friendship}, Patents
+\cite{leskovec2005graphs}, and Orkut \cite{yang2015defining} are obtained from the SNAP dataset \cite{snapnets}, while FirstMM, DD, Reddit,
+and sinaweibo are obtained from the Network Repository \cite{ryan2015network,nr-sigkdd16}.
+
+\cparagraph{Query graphs.} Like \FIXME{xx}, we use \FIXME{xx} different types of query graphs. \FIXME{Describe your query graphs here.}
+
+\subsection{Evaluation Methodology}
+\cparagraph{Competing methods.} We compare \SystemName against GSI \cite{zeng2020gsi}, the state-of-the-art GPU-based subgraph search
+method. We also provide an implementation variant of \SystemName, which matches one vertex at a time. This SV-match scheme is implemented
+by splitting each extension phase that contains one of matching patterns 1-7 in Figure \ref {fig:matchpattern} into multiple extension
+phases that contain only the matching pattern 0.
+
+\cparagraph{Performance report.} To measure the runtime of an approach, we run each test case at least five times and compute the 95\%
+confidence interval bound. We increase the number of profiling runs if the interval is greater than 2\%. We then report the geometric mean
+across runs.

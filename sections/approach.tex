@@ -272,7 +272,7 @@ However, Algorithm \ref{algo:generalDV} is not appropriate for the matching patt
 
 To speed up the matching process of the matching pattern 1, we rearrange the generation order of combinations, as shown in the right part of Figure \ref{fig:ep1opt}, to make accesses more register friendly. Algorithm \ref{algo:optDV} demonstrates the core design of the optimized generation method for the matching pattern 1. From the right part of Figure \ref{fig:ep1opt}, we make two important observations to guide the design of Algorithm \ref{algo:optDV}. First, the element $C_1[i]$ is only used at iteration $i$ and thus we load it into a register (line 2) to reduce its access latency. Second, each time we generate a combination, we can reverse the combination to obtain another combination immediately without reloading data from global memory (lines 4-5).
 
-\begin{algorithm}
+\begin{algorithm}[t]
 	\KwIn{embeddings $emb$, candidates $C$, the number of newly written embeddings $totNum$, the starting address of new embeddings $newEMB$}
 	$writePos \leftarrow atomicAdd(totNum,C.size \times (C.size-1))$\;
 	\For{$i \leftarrow 0$ \KwTo $C.size-1$}{
@@ -346,9 +346,9 @@ Load interval indexes of $elp$ into shared memory\;
 \end{algorithm}
 
 
+\subsection{Matching and Work Scheduling}
 
-
-\section{Matching Order\label{sec:matchingorder}}
+\subsection{Matching Order\label{sec:matchingorder}}
 
 In this section, we first give a brief description of matching order generation method used in \cite{bi2016efficient}, and then demonstrate the details of our matching order generation algorithm based on parallel vertex matching method.
 
@@ -401,11 +401,20 @@ After matching the core structure, we can use any appropriate matching patterns 
 \end{algorithm}
 
 
-\section{Load Balance} In GPU, once a thread block is scheduled to run on an SM, it will not be scheduled out until all warps in this
-thread block are finished. Therefore, if one warp matches a vertex or an edge that has many candidates, all warps in the same thread block
-have to wait for its completion. To address this problem, GSI designs a four-layer balance scheme. However, their scheme needs to invoke a
-GPU kernel inside a GPU kernel, which is time-consuming as illustrated in Section \ref{sec:compargsi}. Different from GSI, we use fixed
-warps, which means that the maximum concurrent warps are generated and will not be scheduled out during execution, to perform subgraph search.
-In this way, a warp with small workload can match next embedding without waiting for other warps. Only when there is no embeddings left,
-the faster warps have to wait for the slower warps. Our approach is simple yet effective, it can mitigate load imbalance to some extend. A
-more powerful load balance scheme can be designed and we leave this for a future study.
+\subsection{Work Load Balance}
+On NVIDIA GPUs, a thread block (i.e., a group of threads) running on an SM cannot be scheduled out until all threads have finished the
+execution. This scheduling strategy requires \SystemName to carefully distributed the work across parallel threads as all threads within a
+thread block have to wait for the slowest peer. To this end, \SystemName uses a fixed number of warps, which means that the maximum
+concurrent warps are generated and will not be scheduled out during execution to perform subgraph search. In this way, a warp with a small
+workload can match the next embedding without waiting for other warps. Only when there are no embeddings left, the faster warps have to
+wait for the slower warps. Our approach is simple yet effective, it can mitigate load imbalance to some extend. \FIXME{Have no idea of what
+is talking about here. This is a naïve scheme and is not something that should be explicitly metioned}.
+
+%In GPU, once a thread block is scheduled to run on an SM, it will not be scheduled out until all warps in this
+%thread block are finished. Therefore, if one warp matches a vertex or an edge that has many candidates, all warps in the same thread block
+%have to wait for its completion. To address this problem, GSI designs a four-layer balance scheme. However, their scheme needs to invoke a
+%GPU kernel inside a GPU kernel, which is time-consuming as illustrated in Section \ref{sec:compargsi}. Different from GSI, we use fixed
+%warps, which means that the maximum concurrent warps are generated and will not be scheduled out during execution, to perform subgraph
+%search. In this way, a warp with small workload can match next embedding without waiting for other warps. Only when there is no embeddings
+%left, the faster warps have to wait for the slower warps. Our approach is simple yet effective, it can mitigate load imbalance to some
+%extend. A more powerful load balance scheme can be designed and we leave this for a future study.

@@ -25,7 +25,8 @@
 \end{table}
 \cparagraph{Experimental platform.} We evaluate our approach on a multi-core workstation with an NVIDIA RTX2080Ti GPU. The server has a
 12-core Intel Xeon E5-2697 CPU at 2.3 GHz and 256 GB of RAM. The GPU has 11 GB of memory and 68 SMs where each SM has 4350 CUDA cores and
-64KB of shared memory
+64KB of shared memory. Our evaluation system runs \FIXME{Ubuntu xx with Linux kernel xx}. We use gcc version xx as the host compiler and
+NVIDIA CUDA toolkit version xx. 
 
 \cparagraph{Data graphs.} We use eight real-world data graphs in our experiment. The size of the graphs ranges from tiny to large, as
 illustrated in Table \ref{tab:datagraph}. Graphs Enron \cite{leskovec2009community}, Gowalla \cite{cho2011friendship}, Patents

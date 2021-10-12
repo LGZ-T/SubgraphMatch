@@ -243,7 +243,15 @@ invalid vertices in $C_2$, we assign 0 to $u_1$ and $u_2$ to indicate invalid em
 the GPU kernel then ignores embeddings that contains a zero.
 
 
-In Algorithm \ref{algo:generalDV}, after finding invalid vertices in $C_2$, we generate new embeddings for rest vertices in $C_1$ (lines 11-12). In each iteration, we load 32 vertices in $C_1$ into shared memory $tmp$ and remove invalid ones from $tmp$ (lines 13-14). In order to allocate space for new embeddings, we estimate its count as the number of combinations of $tmp$ and valid vertices in $C_2$ (line 15). Then, we generate new embeddings for these combinations (line 16). As $u_1$ and $u_2$ have the same vertex label in extension pattern 2, there is a chance that two candidates of $u_1$ and $u_2$ are equal (line 17), which makes the generated new embedding invalid. To solve the problem, we assign 0 to $u_1$ and $u_2$ if the embedding is invalid (line 18), otherwise assign corresponding candidates to $u_1$ and $u_2$ (line 20). Finally, write the new embedding to the specified address (lines 21-22).
+In Algorithm \ref{algo:generalDV}, after finding invalid vertices in $C_2$, we generate new embeddings for the rest
+vertices in $C_1$ (lines 11-12). In each iteration, we load 32 vertices in $C_1$ into the shared memory buffer $tmp$
+and remove invalid ones from it (lines 13-14). To allocate space for new embeddings, we estimate its count as the
+number of combinations of $tmp$ and valid vertices in $C_2$ (line 15). Then, we generate new embeddings for these
+combinations (line 16). As $u_1$ and $u_2$ have the same vertex label in extension pattern 2, there is a chance that
+two candidates of $u_1$ and $u_2$ are equal (line 17),  leading to an invalid new embedding. To solve the problem, we
+assign 0 to $u_1$ and $u_2$ if the embedding is invalid (line 18); otherwise, we assign the corresponding candidates to
+$u_1$ and $u_2$ (line 20). Finally, write the new embedding to the specified address (lines 21-22).
+
 
 \subsection{Matching Pattern 1}
 Algorithm \ref{algo:generalDV} is not appropriate for the matching pattern 1. In the matching pattern 1, $u_1$ and $u_2$ are extended from the same source vertex $u_{s1}$ and have the same vertex label, thus $C_1 = C_2$. If Algorithm \ref{algo:generalDV} is applied to the matching pattern 1, each vertex in $C_2$ can be accessed by up to $C_1.size$ times. As shown in the left part of Figure \ref{fig:ep1opt}, element 1 is accessed at each iteration of $i$. If $C_1.size>32$, we need to reload element 1 from global memory each time we access it. Other elements also encounter the same problem.

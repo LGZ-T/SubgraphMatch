@@ -247,10 +247,10 @@ In Algorithm \ref{algo:generalDV}, after finding invalid vertices in $C_2$, we g
 vertices in $C_1$ (lines 11-12). In each iteration, we load 32 vertices in $C_1$ into the shared memory buffer $tmp$
 and remove invalid ones from it (lines 13-14). To allocate space for new embeddings, we estimate its count as the
 number of combinations of $tmp$ and valid vertices in $C_2$ (line 15). Then, we generate new embeddings for these
-combinations (line 16). As $u_1$ and $u_2$ have the same vertex label in extension pattern 2, there is a chance that
-two candidates of $u_1$ and $u_2$ are equal (line 17),  leading to an invalid new embedding. To solve the problem, we
+combinations (line 16). As $u_1$ and $u_2$ have the same vertex label in extension pattern 2, it is possible that two
+candidates of $u_1$ and $u_2$ are identical (line 17),  leading to an invalid new embedding. To solve the problem, we
 assign 0 to $u_1$ and $u_2$ if the embedding is invalid (line 18); otherwise, we assign the corresponding candidates to
-$u_1$ and $u_2$ (line 20). Finally, write the new embedding to the specified address (lines 21-22).
+$u_1$ and $u_2$ (line 20). Finally, we store the new embedding to the specified address (lines 21-22).
 
 
 \subsection{Matching Pattern 1}

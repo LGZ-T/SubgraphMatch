@@ -191,14 +191,15 @@ In the remainder of this section, we first describe embedding generation methods
 
 \subsection{Matching Patterns 2 to 4}
 
-For matching patterns 2-4, we employ a simple method described in Algorithm \ref{algo:generalDV} to generate new embeddings. The key idea
-is to iterate over all combinations of candidates of $u_{1}$ and $u_{2}$ in the data graph (denoted as $C_1$ and $C_2$ respectively) to
-construct new embeddings by appending each valid combination to a new copy of the current embedding $emb$. We consider a combination to be
-valid if neither VIDs in the combination is equal to VIDs in $emb$. To avoid checking this condition repeatedly, we first check this
-condition for all vertices in $C_2$ once (lines 3-4) and record indexes of vertices whose VIDs also exist in $emb$ (line 5). To fully
-utilize $C_2$, we generate new embeddings while checking the condition. Once a vertex in $C_2$ is checked to be valid (lines 6-7), we
-assign this vertex and the first valid vertex in $C_1$ to $u_2$ and $u_1$, respectively (lines 1,8). Then, we write the new embedding
-$(emb,u_1,u_2)$ to the corresponding address (lines 9-10).
+For matching patterns 2-4, we employ a simple method described in Algorithm \ref{algo:generalDV} to generate new
+embeddings. Our key idea is to iterate over all combinations of candidates of $u_{1}$ and $u_{2}$ in the data graph
+(denoted as $C_1$ and $C_2$ respectively) to construct new embeddings by appending each valid combination to a new copy
+of the current embedding $emb$. We consider a combination to be valid if none of the VIDs in the combination \FIXME{is
+presented in the current - check this}  $emb$. To avoid checking this condition repeatedly, we first check this
+condition for all vertices in $C_2$ once (lines 3-4) and record indexes of vertices whose VIDs also exist in $emb$
+(line 5). To fully utilize $C_2$, we generate new embeddings while checking the condition. Once a vertex in $C_2$ is
+checked to be valid (lines 6-7), we assign this vertex and the first valid vertex in $C_1$ to $u_2$ and $u_1$,
+respectively (lines 1,8). Then, we store the new embedding $(emb,u_1,u_2)$ to the corresponding address (lines 9-10).
 
 \begin{algorithm}[t!]
 	\KwIn{the partial embedding $emb$, candidates of $u_1$ $C_1$, candidates of $u_2$ $C_2$, the number of newly written embeddings $totNum$, the starting address of new embeddings $newEMB$}
@@ -235,7 +236,12 @@ $(emb,u_1,u_2)$ to the corresponding address (lines 9-10).
 	\label{algo:generalDV}
 \end{algorithm}
 
-At the beginning of Algorithm \ref{algo:generalDV}, we allocate space for new embeddings generated when checking conditions for $C_2$ (line 2). Since we do not know the number of valid vertices in $C_2$ until all vertices are checked, we use the vertex count of $C_2$, denoted as $C_{2}.size$, to overestimate the number of new embeddings. If there are invalid vertices in $C_2$, we assign 0 to $u_1$ and $u_2$ to indicate invalid embeddings (line 6). When a GPU kernel read an embedding that contains 0, it skips processing it.
+At the beginning of Algorithm \ref{algo:generalDV}, we allocate space for new embeddings generated when checking
+conditions for $C_2$ (line 2). Since we do not know the number of valid vertices in $C_2$ ahead of time, we allocate
+space to store the maximum sized embedding – the number of vertices in  $C_2$ (denoted as $C_{2}.size$). If there are
+invalid vertices in $C_2$, we assign 0 to $u_1$ and $u_2$ to indicate invalid embeddings (line 6). During processing,
+the GPU kernel then ignores embeddings that contains a zero.
+
 
 In Algorithm \ref{algo:generalDV}, after finding invalid vertices in $C_2$, we generate new embeddings for rest vertices in $C_1$ (lines 11-12). In each iteration, we load 32 vertices in $C_1$ into shared memory $tmp$ and remove invalid ones from $tmp$ (lines 13-14). In order to allocate space for new embeddings, we estimate its count as the number of combinations of $tmp$ and valid vertices in $C_2$ (line 15). Then, we generate new embeddings for these combinations (line 16). As $u_1$ and $u_2$ have the same vertex label in extension pattern 2, there is a chance that two candidates of $u_1$ and $u_2$ are equal (line 17), which makes the generated new embedding invalid. To solve the problem, we assign 0 to $u_1$ and $u_2$ if the embedding is invalid (line 18), otherwise assign corresponding candidates to $u_1$ and $u_2$ (line 20). Finally, write the new embedding to the specified address (lines 21-22).
 

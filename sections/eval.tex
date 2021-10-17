@@ -10,13 +10,14 @@ The results of space cost are shown in Table \ref{tab:graphsize}. We can see fro
 
 \begin{table}
 \centering
-  \caption{Space overehead of CSR, hash-PCSR (GSI), and our interval-PCSR. The \emph{Max} column represents the size of maximum edge label partition in
-  the interval-PCSR. The \emph{spave reduction} column represents the percentage of the space saved given by our interval-PCSR over GSI's hash-PCSR.}
+  \caption{Space overhead of CSR, hash-PCSR (GSI), and our interval-PCSR storage formats. The \emph{Max} column represents the size of maximum edge label partition in
+  the interval-PCSR. The \emph{reduction over hash-PCSR} column represents the percentage of the space saved given by our interval-PCSR over GSI's hash-PCSR.}
   \label{tab:graphsize}
-  \begin{tabular}{llp{30pt}p{30pt}lr{30pt}}
+  \scriptsize
+  \begin{tabular}{lllllr}
   \toprule
-    \textbf{Graph} &\textbf{CSR}&\textbf{interval-PCSR}&\textbf{hash-PCSR}&\emph{\textbf{Max}}&\emph{space reduction}\\
-    \bottomrole
+    \textbf{Graph} &\textbf{CSR}&\textbf{interval-PCSR}&\textbf{hash-PCSR}&\emph{\textbf{Max}}&\emph{Reduction over hash-PCSR}\\
+    \midrule
     Enron 		&1.6MB	&1.7MB	&13MB	&0.6MB	&87\% \\
     FirstMM 	&1.2MB	&1.5MB	&22MB	&0.5MB	&93\% \\
     DD 			&15MB	&11MB	&139MB	&2.1MB	&87\% \\
@@ -26,7 +27,7 @@ The results of space cost are shown in Table \ref{tab:graphsize}. We can see fro
     Orkut 		&906MB	&997MB	&1.94GB	&100MB	&50\% \\
     sinaweibo	&2.2GB	&2.5GB	&10GB	&256MB	&75\% \\
 
-    \hline
+    \bottomrule
   \end{tabular}
 \end{table}
 

@@ -1,14 +1,26 @@
 \begin{abstract}
-Subgraph search finds all subgraphs of a data graph that are isomorphic to a query graph. It is a fundamental operation in many application
-fields like analysis of protein-protein interaction network and community detection. Existing works adopt a simple search procedure that
-matches vertices of a query graph one by one, which incurs a large number of memory accesses during reading and writing intermediate
-results. In this work, we perform subGraph sEarch usiNg parallEl Vertex mAtching (\SystemName). Specifically, \SystemName can match as many
-query vertices as possible at each iteration and generate corresponding results in one GPU kernel. Compared to GSI, which is the
-state-of-the-art GPU-based subgraph search method, our approach achieves an average speedup of $5\times$. Additionally, we optimize the
-data graph format of GSI by replacing its hash indexes with interval indexes. The proposed interval-index format reduces the space cost and
-searching time of hash-index format by 83\% and 58\% respectively. To validate the effectiveness of parallel vertex matching, we also
-compare it to the single vertex matching devised based on our  parallel vertex matching. Results show that our approach improves the single
-vertex matching by 15.9\% on average.
+Many graph-based workloads require performing \emph{subgraph matching} by finding all subgraphs of a data graph that are isomorphic to a
+input query graph. Doing so on a real-life data graph is often computation-intensive because of the large number of graph vertices to be
+examined. Existing schemes for subgraph matching all adopt a simple scheme by matching vertices of a query graph one by one. This
+strategy fails to capitalize on the structure parallelism of graphs and can incur extensive memory accesses on GPUs. This work presents
+\SystemName, a new GPU-based subgraph matching scheme that can match multiple query vertices simultaneously. Unlike prior work,
+\SystemName performs subgraph matching within a single GPU kernel, eliminating many memory access operations required to process the
+intermediate results. \SystemName also provides an enhanced storage format to reduce the memory footprint of graph data and improve
+processing efficiency. We evaluate our approach by applying it to eight real-life graph datasets on an NVIDIA 2080Ti GPU. Experimental
+results show that our approach improves GSI, the state-of-the-art graph matching framework, by 16\% on average (up to \FIXME{xx}\%),
+while reducing the memory footprint by 83\%.
+
+
+%Subgraph search finds all subgraphs of a data graph that are isomorphic to a query graph. It is a fundamental operation in many application
+%fields like analysis of protein-protein interaction network and community detection. Existing works adopt a simple search procedure that
+%matches vertices of a query graph one by one, which incurs a large number of memory accesses during reading and writing intermediate
+%results. In this work, we perform subGraph sEarch usiNg parallEl Vertex mAtching (\SystemName). Specifically, \SystemName can match as many
+%query vertices as possible at each iteration and generate corresponding results in one GPU kernel. Compared to GSI, which is the
+%state-of-the-art GPU-based subgraph search method, our approach achieves an average speedup of $5\times$. Additionally, we optimize the
+%data graph format of GSI by replacing its hash indexes with interval indexes. The proposed interval-index format reduces the space cost and
+%searching time of hash-index format by 83\% and 58\% respectively. To validate the effectiveness of parallel vertex matching, we also
+%compare it to the single vertex matching devised based on our  parallel vertex matching. Results show that our approach improves the single
+%vertex matching by 15.9\% on average.
 
 %Based on properties of the data graph, there are many types of subgraph matching. In this work, we focus on matching query graphs on a labeled undirected data graph with the acceleration of GPU.
 \end{abstract}

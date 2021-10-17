@@ -187,7 +187,10 @@ vertex labels or do not satisfy the restrictions. Finally, we use different algo
 embeddings for different matching patterns (lines 8-15).
 
 In the remainder of this section, we first describe embedding generation methods for the fundamental matching patterns 2-4 of Figure
-\ref{fig:matchpattern}. We then describe our optimized embedding generation method for the matching pattern 1 of Figure \ref{fig:matchpattern} before showing how our optimizations can be extended to matching patterns 5-7. The matching pattern 0 uses the tradition method to generate embeddings, thus we do not elaborate it in this work.
+\ref{fig:matchpattern}. We then describe our optimized embedding generation method for the matching pattern 1 of Figure
+\ref{fig:matchpattern} before showing how our optimizations can be extended to matching patterns 5-7. The matching pattern 0 uses the
+tradition method to generate embeddings, thus we do not elaborate it in this work. In Section \ref{sec:spm}, we describe our approach for
+choosing which of the candidate matching patterns to use for subgraph matching.
 
 \subsection{Matching Patterns 2 to 4}
 
@@ -311,7 +314,7 @@ generate a combination, we can reverse the combination to obtain another combina
 	\label{algo:nvext}
 \end{algorithm}
 
-Our approach for generate embeddings for matching patterns 5-7 is described in Algorithm \ref{algo:nvext}, which extends Algorithm
+Our approach for generate embeddings for matching patterns 5-7 is described in Algorithm \ref{algo:nvext}. This algorithm extends Algorithm
 \ref{algo:optDV}. For matching pattern 5 (line 1), we iterate over all combinations of $u_1, \cdots, u_{n-2}$ (line 2) and use Algorithm
 \ref{algo:optDV} to match the last two query vertices $u_{n-1}$ and $u_n$ (line 4). Before invoking Algorithm \ref{algo:optDV}, we need to
 construct a new embedding and new candidates for $u_{n-1}$ and $u_n$ (line 3). For matching patterns 6 and 7, we first use an outer loop to
@@ -319,8 +322,13 @@ iterate over all combinations of $u_{n+1}, \cdots, u_{n+m}$, and use the same me
 (lines 7-9).
 
 
-\subsection{Priorities of Matching Patterns}
-When decomposing the query graph into extension and elimination phases, there is a possibility that multiple matching patterns are available for an extension phase. To choose the most suitable matching pattern, we assign 2-level priorities to matching patterns. In the first level, we prioritize matching patterns based on the number of query vertices to be matched in each matching pattern. Thus, matching patterns 5-7 get the highest priority, 1-4 get the medium priority, and 0 gets the lowest priority. In the second level, we prioritize matching patterns that posses the same first level priority based on efficiency of each matching pattern when generating embeddings.
+\subsection{Priorities of Matching Patterns\label{sec:spm}}
+When decomposing the query graph into extension and elimination phases, there is a possibility that multiple matching patterns are
+available for an extension phase. To choose the most suitable matching pattern, we apply a 2-level priority system to matching patterns. In
+the first level, we prioritize matching patterns based on the number of query vertices to be matched in each matching pattern. Thus,
+matching patterns 5-7 get the highest priority, 1-4 get the medium priority, and 0 gets the lowest priority. In the second level, we
+prioritize matching patterns that posses the same first level priority based on efficiency of each matching pattern when generating
+embeddings.
 
 We first analyze the efficiency of medium priority matching patterns, and then the highest priority ones. The matching pattern 1 uses an optimized method (Algorithm \ref{algo:optDV}) to generate embeddings, thus it is most efficient among matching patterns 1-4. matching patterns 2-4 use the normal method (Algorithm \ref{algo:generalDV}) but the matching pattern 2 needs to evaluate the equality of candidates of $u_1$ and $u_2$. Therefore, the matching pattern 2 is the least efficient one. Compared to the matching pattern 3, the matching pattern 4 needs one more step to find the address of $u_{s2}$, thus it is less efficient than the matching pattern 3. Consequently, the priority order of matching patterns 1-4 from the highest to the lowest is matching pattern 1, 3, 4, and 2.
 
@@ -367,7 +375,13 @@ When decomposing the core structure into extension and elimination phases, we ne
 
 Based on \cite{bi2016efficient} and our parallel vertex matching method, we design Algorithm \ref{algo:genmatchorder} to generate matching order of extension and elimination phases. At the beginning of Algorithm \ref{algo:genmatchorder}, we adopt methods proposed in \cite{shi2020graphpi,mawhirter2019graphzero} to generate restrictions on VIDs in embeddings (line 1). Thus, we can avoid generating automorphic embeddings. Then we generate the core structure of $q$ by iteratively removing degree-one vertices from $q$, and construct trees of $q$ using removed vertices (line 2).
 
-In order to match the core structure, we first find the smallest circle in the core structure (line 3), and then select vertices in the circle that conform to the highest priority matching pattern among matching patterns 0, 1, and 3 (line 4). The selected vertices constitute the first extension phase (lines 5-6), which is a special kind of extension phase. Different from the normal extension phase that fetches source vertices from embeddings (Figure \ref{fig:overview}\textbf{\textcircled{3}}), the first extension phase fetches the source vertex from the edge label partition (Figure \ref{fig:overview}\textbf{\textcircled{1}}). After generating the initial phase, we iteratively find vertices in the circle that conform to matching patterns 0-4 and choose the one with the highest priority (lines 7-9). Finally, we use the non-tree edge in the circle to construct an elimination phase (line 10).
+To match the core structure, we first find the smallest circle in the core structure (line 3), and then select vertices in the circle that
+conform to the highest priority matching pattern among matching patterns 0, 1, and 3 (line 4). The selected vertices constitute the first
+extension phase (lines 5-6), which is a special kind of extension phase. Different from the normal extension phase that fetches source
+vertices from embeddings (Figure \ref{fig:overview}\textbf{\textcircled{3}}), the first extension phase fetches the source vertex from the
+edge label partition (Figure \ref{fig:overview}\textbf{\textcircled{1}}). After generating the initial phase, we iteratively find vertices
+in the circle that conform to matching patterns 0-4 and choose the one with the highest priority (lines 7-9). Finally, we use the non-tree
+edge in the circle to construct an elimination phase (line 10).
 
 After decomposing the smallest circle, we iteratively construct extension and elimination phases for the rest vertices and edges in the core structure (line 11). First, we find all non-tree edges and group them by the edge label (lines 12-13). For each group, we construct an elimination phase (lines 14-15). If no non-tree edges are found, we search for unmatched vertices in the core structure that can form one of matching patterns 0-4, and choose the one with the highest priority (lines 16-18).
 

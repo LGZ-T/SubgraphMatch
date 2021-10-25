@@ -23,7 +23,9 @@ optimized interval-PCSR (d). Note that VIDs in dashed squares do not need to be 
 
 
 \begin{algorithm}[t!]
-\KwIn{the data graph in our format $G$, the query graph $q$} \KwOut{Embeddings of $q$ $EMB$} $\pi \leftarrow \textsc{GenMatchOrder}(q)$\;
+\KwIn{the data graph in our format $G$, the query graph $q$}
+\KwOut{Embeddings of $q$ $EMB$}
+$\pi \leftarrow \textsc{GenMatchOrder}(q)$\;
 Load the edge label partition $elp$ whose edge label is $\pi[0].edgeLabel$ from $G$ to GPU\; Allocate all available GPU memory space to
 $newEMB$\; $\textsc{ExtKernel}(elp,NULL,newEMB,\pi[0])$\; $EMB \leftarrow newEMB$\; \For{$i \leftarrow 1$ \KwTo $\pi .size$}{
 	Load the edge label partition $elp$ whose edge label is $\pi[i].edgeLabel$ from $G$ to GPU\;
@@ -101,31 +103,27 @@ label partition, which in turn leads to a smaller number of intervals. Our data 
 
  As described in Algorithm \ref{algo:genmap} and Figure \ref{fig:dataformat}d, \SystemName takes several steps to convert the data graph into a GPU-tuned storage format, described as follows.
 
-\cparagraph{Step 1: Find the largest ELP.} We start by choosing the partition that contains the most vertices (line 3 in Algorithm
-\ref{algo:genmap}). Our intuition is that the more vertices a partition contains, the higher probability it will be accessed. Therefore,
-reducing the number of intervals for this partition can help reduce the average memory access latency. For the example shown in Figure
-\ref{fig:dataformat}d \textbf{\textcircled{1}}, edge label partition 0 is selected because it contains the largest number of vertices.
+\cparagraph{Step 1: Find the largest ELP.} We start by choosing the partition that contains the most vertices (line 3). Our intuition is that the more vertices a partition contains, the higher probability it will be accessed. Therefore, reducing the number of intervals for this partition can help reduce the average memory access latency. For the example shown in Figure
+\ref{fig:dataformat}d \textbf{\textcircled{1}}, ELP 0 is selected because it contains the largest number of vertices.
 
 \cparagraph{Step 2: Rename VIDs.} In the second step, we try to increase the continuous VID interval by renaming the VIDs. To this end, for
 each vertex, we find out all ELPs that contain the vertex. For example, vertices 4 and 8 in Figure \ref{fig:dataformat}d \textbf{\textcircled{1}} belong to ELPs 0,
-1 and 2 - these ELPs form a share set for the two vertices. Next, we merge VIDs that have the same shares set into a subpartition (line 4
-in Algorithm~\ref{algo:genmap}). For the example shown in Figure \ref{fig:dataformat}d \textbf{\textcircled{1}}, we map vertices 4 and 8 to a subpartition, subpart 0, because they have the same share set. We apply this grouping strategy to the largest ELP found in step 1. For the vertices that belong
-to the same subpartition, we can assign unique, continuous new VIDs to them in arbitrary order, as long as these new VIDs are contiguous
+1 and 2 - these ELPs form a share set, $shareSet$, for the two vertices. Next, we merge VIDs that have the same share sets into a subpartition, $subPart$ (line 4). For the example shown in Figure \ref{fig:dataformat}d \textbf{\textcircled{1}}, we map vertices 4 and 8 to a subpartition, $subpart 0$, because they have the same share set. We apply this grouping strategy to the largest ELP found in step 1. For the vertices that belong to the same subpartition, we can assign unique, continuous new VIDs to them in arbitrary order, as long as these new VIDs are contiguous
 and follow the largest VID from the last processed subpartition.
 
 \cparagraph{Step 3: Process subpartitions.} To determine the order of the subpartitions of an ELP to be processed, we start from the
-subpartition that is shared by most ELPs.  This means for the example shown in Figure \ref{fig:dataformat}d \textbf{\textcircled{1}}, we would first process
-subpart 0, because it has the largest share set (with 3 ELPs).  The next subpartition we choose will be the one that has the largest number of common ELPs between its share set and the shared set of the last chosen subpartition. Looking at Figure \ref{fig:dataformat}d \textbf{\textcircled{1}} again, subpartition 1 will be the secondly chosen subpartition because its shared set has two ELPs ($0, 1$) with the share set of subpartition 0 (the firstly chosen subpartition). We choose this strategy because of the following two reasons.
+subpartition that is shared by most ELPs (line 8).  This means for the example shown in Figure \ref{fig:dataformat}d \textbf{\textcircled{1}}, we would first process
+$subpart 0$, because it has the largest share set (with 3 ELPs).  The next subpartition we choose will be the one that has the largest number of common ELPs between its share set and the shared set of the last chosen subpartition (line 13). Looking at Figure \ref{fig:dataformat}d \textbf{\textcircled{1}} again, $subPart 1$ will be the secondly chosen subpartition because its shared set has two ELPs ($0, 1$) with the share set of $subPart 0$ (the firstly chosen subpartition). We choose this strategy because of the following two reasons.
 First, the larger number of elements in common in the shared sets of two subpartitions, the more ELPs will have the two subpartitions.
 Secondly, because we ensure the VIDs between two consecutively processed subpartitions are continuous, we can then merge the VIDs of the
-two subpartitions to form a contiguous interval to be stored in a single interval index. Using this strategy, we can use a single interval index to record the new VIDs of subpartitions 0 and 1 in Figure \ref{fig:dataformat}d \textbf{\textcircled{2}}.
+two subpartitions to form a contiguous interval to be stored in a single interval index. Using this strategy, we can use a single interval index to record the new VIDs of $subPart$ 0 and 1 in Figure \ref{fig:dataformat}d \textbf{\textcircled{2}}. For each selected subpartition, we assign new contiguous VIDs to old VIDs in the selected subpartition (lines 9-10, 15-17).
 
 
 \cparagraph{Step 4: Repeat before Stop.} We delete the processed vertices from an ELP, and repeat steps 1 to 4 for each ELP in turn. This
 process stops until all VIDs have been renamed and recored in the interval indices. This is illustrated in Figure \ref{fig:dataformat}d \textbf{\textcircled{3}}.
 
 
-Figure \ref{fig:dataformat} shows the storage size of \SystemName against the PCSR scheme used by GSI for eight data graphs. The \SystemName storage
+Table \ref{tab:graphsize} shows the storage size of \SystemName against the PCSR scheme used by GSI for eight data graphs. The \SystemName storage
 format reduces the storage size (and the GPU memory footprint) by 83\%.
 
 \section{Extension and Elimination\label{sec:extensionphase}}
@@ -155,14 +153,17 @@ associated with \texttt{atomicAdd}, we found that this is not a severe problem i
 intrinsic irregularity of graph structures.
 
 \begin{algorithm}[t]
-\KwIn{the edge label partition $elp$, partial embeddings $EMB$, the starting address of new embeddings $newEMB$, the extension phase
-$extP$} $totNum \leftarrow 0$\; Load interval indexes of $elp$ into shared memory\; \ForEach{$emb \in EMB$}{
+\KwIn{the edge label partition $elp$, partial embeddings $EMB$, the extension phase
+$extP$, the starting address of new embeddings $newEMB$}
+$totNum \leftarrow 0$\;
+Load interval indexes of $elp$ into shared memory\;
+\ForEach{$emb \in EMB$}{
 	Get source VIDs $u_{s1}$ and $u_{s2}$ from $emb$\;
 	Search $u_{s1}$ and $u_{s2}$ in interval indexes and extract their neighbors $ne1$ and $ne2$, respectively.\;
 	Remove neighbors that do not have the same vertex labels as $u_{1}$ and $u_{2}$ from $ne1$ and $ne2$, respectively\;
 	Remove neighbors that do not satisfy the restrictions of $u_{1}$ and $u_{2}$ from $ne1$ and $ne2$, respectively\;
 	\If{$extP$ is matching pattern 0}{
-		We use the traditional SV-ext method to generate embeddings for $extP$\;
+		We use the traditional SV-match method to generate embeddings for $extP$\;
 	}
 	\ElseIf{$extP$ is matching pattern 1}{
 		$\textsc{OptDouExt}(emb,ne1,totNum,newEMB)$\;
@@ -183,7 +184,7 @@ $extP$} $totNum \leftarrow 0$\; Load interval indexes of $elp$ into shared memor
 Algorithm \ref{algo:extphase} describes the overall workflow of the \SystemName extension phase. For each embedding (line 3), we first
 obtain the source VIDs from the embedding according to the matching pattern to be processed (line 4). Next, we search the source VIDs in
 the \SystemName interval-PCSR of the loaded ELP and extract their neighbors (line 5).  Then, we remove invalid neighbors that either have wrong
-vertex labels or do not satisfy the restrictions. Finally, we use different algorithms to generate new
+vertex labels or do not satisfy the restrictions （lines 6-7）. Finally, we use different algorithms to generate new
 embeddings for different matching patterns (lines 8-15).
 
 In the remainder of this section, we first describe embedding generation methods for the fundamental matching patterns 2-4 of Figure
@@ -191,19 +192,11 @@ In the remainder of this section, we first describe embedding generation methods
 
 \subsection{Matching Patterns 2 to 4}
 
-For matching patterns 2-4, we employ a simple method described in Algorithm \ref{algo:generalDV} to generate new
-embeddings. Our key idea is to iterate over all combinations of candidates of $u_{1}$ and $u_{2}$ in the data graph
-(denoted as $C_1$ and $C_2$ respectively) to construct new embeddings by appending each valid combination to a new copy
-of the current embedding $emb$. We consider a combination to be valid if none of the VIDs in the combination \FIXME{is
-presented in the current - check this}  $emb$. To avoid checking this condition repeatedly, we first check this
-condition for all vertices in $C_2$ once (lines 3-4) and record indexes of vertices whose VIDs also exist in $emb$
-(line 5). To fully utilize $C_2$, we generate new embeddings while checking the condition. Once a vertex in $C_2$ is
-checked to be valid (lines 6-7), we assign this vertex and the first valid vertex in $C_1$ to $u_2$ and $u_1$,
-respectively (lines 1,8). Then, we store the new embedding $(emb,u_1,u_2)$ to the corresponding address (lines 9-10).
+For matching patterns 2-4, we employ a simple method described in Algorithm \ref{algo:generalDV} to generate new embeddings. Our key idea is to iterate over all combinations of candidates of $u_{1}$ and $u_{2}$ in the data graph (denoted as $C_1$ and $C_2$ respectively) to construct new embeddings by appending each valid combination to a new copy of the current embedding $emb$. We consider a combination to be valid if none of the VIDs in the combination is presented in the current $emb$. To avoid checking this condition repeatedly, we first check this condition for all vertices in $C_2$ once (lines 3-4) and record indexes of vertices whose VIDs also exist in $emb$ (line 5). To fully utilize $C_2$, we generate new embeddings while checking the condition. Once a vertex in $C_2$ is checked to be valid (lines 6-7), we assign this vertex and the first valid vertex in $C_1$ to $u_2$ and $u_1$, respectively (lines 1,8). Then, we store the new embedding $(emb,u_1,u_2)$ to the corresponding address (lines 9-10).
 
 \begin{algorithm}[t!]
 	\KwIn{the partial embedding $emb$, candidates of $u_1$ $C_1$, candidates of $u_2$ $C_2$, the number of newly written embeddings $totNum$, the starting address of new embeddings $newEMB$}
-	Find the index $i$ of the first valid vertex in $ne1$\;
+	Find the index $i$ of the first valid vertex in $C_1$\;
 	$writePos \leftarrow atomicAdd(totNum,1 \times C_{2}.size)$\;
 	\For{$j \leftarrow 0$ \KwTo $C_{2}.size$}{
 		\If{$C_2[j] \in emb$}{
@@ -222,7 +215,7 @@ respectively (lines 1,8). Then, we store the new embedding $(emb,u_1,u_2)$ to th
 		Remove candidates that exist in $emb$ from $tmp$\;
 		$writePos \leftarrow atomicAdd(totNum,tmp.size \times (C_{2}.size-boundry.size))$\;
 		\ForEach{$0 \leq k<tmp.size$ and $0 \leq j<C_{2}.size$ and $j \notin boundry$}{
-			\If{This is EP 2 and $C_1[k]=C_2[j]$}{
+			\If{This is matching pattern 2 and $C_1[k]=C_2[j]$}{
 				$u_1 \leftarrow 0$; $u_2 \leftarrow 0$\;
 			}
 			\Else{
@@ -257,7 +250,7 @@ $u_1$ and $u_2$ (line 20). Finally, we store the new embedding to the specified 
 \begin{figure} [t]
 \centering
 \includegraphics[width=\columnwidth]{./figure/ep1opt.eps}
-\caption{An example of generating new embeddings for the matching pattern 1.}	
+\caption{An example of generating new embeddings for matching pattern 1.}	
 \label{fig:ep1opt}
 \end{figure}
 
@@ -276,14 +269,14 @@ $u_1$ and $u_2$ (line 20). Finally, we store the new embedding to the specified 
 \end{algorithm}
 Algorithm \ref{algo:generalDV} is ill-suite for matching pattern 1. For this matching pattern, $u_1$ and $u_2$ are extended from the same
 source vertex $u_{s1}$ and have the same vertex label, i.e., $C_1 = C_2$. If Algorithm \ref{algo:generalDV} is applied to this pattern,
-each vertex in $C_2$ can be accessed by up to $C_1.size$ times. As shown in the left part of Figure \ref{fig:ep1opt}, element 1 is accessed
-at each iteration of $i$. If $C_1.size>32$, we need to reload element 1 from global memory each time we access it. Aceesing other elements
+each vertex in $C_2$ can be accessed by up to $C_1.size$ times. As shown in Figure \ref{fig:ep1opt}a, element 1 is accessed
+at each iteration of $i$. If $C_1.size>32$, we need to reload element 1 from global memory each time we access it. Accessing other elements
 also have the same problem.
 
 \SystemName is designed to accelerate the matching process of matching pattern 1. We achieve this by rearranging the generation order of
-combinations, as shown in \FIXME{Figure \ref{fig:ep1opt} b}. This arrangement promotes register usage, which in turn reduces the memory
+combinations, as shown in Figure \ref{fig:ep1opt}b. This arrangement promotes register usage, which in turn reduces the memory
 accessing latency. The core design of our optimized generation method for matching pattern 1 is shown in Algorithm \ref{algo:optDV}. From
-\FIXME{Figure \ref{fig:ep1opt} b}, we make two important observations to guide the design of Algorithm \ref{algo:optDV}. First, since the
+Figure \ref{fig:ep1opt}b, we make two important observations to guide the design of Algorithm \ref{algo:optDV}. First, since the
 element $C_1[i]$ is only used at iteration $i$, we will load it into a register (line 2) to reduce its access latency. Second, each time we
 generate a combination, we can reverse the combination to obtain another combination immediately without reloading data from global memory
 (lines 4-5).

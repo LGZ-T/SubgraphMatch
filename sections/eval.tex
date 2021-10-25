@@ -1,20 +1,23 @@
 \section{Experimental Results}
 
+\FIXME{Talk about your overall performance - speedup before discussing things like the storage format.}
 
 \subsection{Evaluation of Data Graph Formats}
-In this section, we first present the space cost of three data graph formats, including CSR, hash-PCSR, and  interval-PCSR, and then the searching time of hash-PCSR and interval-PCSR. 
+In this section, we first present the space cost of three data graph formats, including CSR, hash-PCSR, and  interval-PCSR, and then the searching time of hash-PCSR and interval-PCSR.
 
 The results of space cost are shown in Table \ref{tab:graphsize}. We can see from Table \ref{tab:graphsize} that CSR has the smallest space among three data graph formats. The reason is that all VIDs in CSR are contiguous and unique, while VIDs in PCSR are non-contiguous and many duplicate VIDs exist in different edge label partitions. However, we need to transfer the whole CSR format graph to GPU in order to perform subgraph search, which is space and time consuming. In contrast, our interval-PCSR achieves similar space cost as CSR but only needs to transfer one edge label partition to GPU before each iteration of subgraph search. AS shown in Table \ref{tab:graphsize}, the size of the maximum edge label partition in interval-PCSR (denoted as \emph{Max}) is greatly smaller than CSR, which makes data transfer in our approach more efficient.
 
 
 \begin{table}
 \centering
-  \caption{Space cost of CSR, hash-PCSR, and interval-PCSR. The \emph{Max} column represents the size of maximum edge label partition in interval-PCSR. The \emph{reduce-hash} column represents the percentage of the saved space by interval-PCSR compared to hash-PCSR.}
+  \caption{Space overhead of CSR, hash-PCSR (GSI), and our interval-PCSR storage formats. The \emph{Max} column represents the size of maximum edge label partition in
+  the interval-PCSR. The \emph{reduction over hash-PCSR} column represents the percentage of the space saved given by our interval-PCSR over GSI's hash-PCSR.}
   \label{tab:graphsize}
-  \begin{tabular}{ccp{30pt}p{30pt}cp{30pt}}
-  \hline
-    Graph &CSR&interval-PCSR&hash-PCSR&\emph{Max}&\emph{reduce-hash}\\
-    \hline
+  \scriptsize
+  \begin{tabular}{lllllr}
+  \toprule
+    \textbf{Graph} &\textbf{CSR}&\textbf{interval-PCSR}&\textbf{hash-PCSR}&\emph{\textbf{Max}}&\emph{Reduction over hash-PCSR}\\
+    \midrule
     Enron 		&1.6MB	&1.7MB	&13MB	&0.6MB	&87\% \\
     FirstMM 	&1.2MB	&1.5MB	&22MB	&0.5MB	&93\% \\
     DD 			&15MB	&11MB	&139MB	&2.1MB	&87\% \\
@@ -24,7 +27,7 @@ The results of space cost are shown in Table \ref{tab:graphsize}. We can see fro
     Orkut 		&906MB	&997MB	&1.94GB	&100MB	&50\% \\
     sinaweibo	&2.2GB	&2.5GB	&10GB	&256MB	&75\% \\
 
-    \hline
+    \bottomrule
   \end{tabular}
 \end{table}
 
@@ -66,7 +69,7 @@ runs much faster without the modulo operation. However, variable divisor is nece
 In summary, our interval-PCSR not only reduces the space cost of hash-PCSR by replacing hash indexes with interval indexes, but also
 reduces the searching time by eliminating hash calculation.
 
-\subsection{Comparison of \SystemName and GSI\label{sec:comparegsi}} 
+\subsection{Comparison of \SystemName and GSI\label{sec:comparegsi}}
 \begin{figure*}
 \centering
 \includegraphics[width=\textwidth]{./figure/overperformance.eps}

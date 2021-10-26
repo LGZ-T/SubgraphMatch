@@ -1,6 +1,6 @@
 \section{Discussions}
 Naturally, there is room for further work and improvement. We discuss a few points there.
 
-\cparagraph{Matching more than two vertices.} \FIXME{XX}
+\cparagraph{A more efficient embedding generation algorithm can be devised for matching patterns 5-7}. In our present implementation, Algorithm \ref{algo:nvext}, the efficient generation algorithm is only applied to iterate candidates of the last two query vertices, which ignores the fact that all query vertices share the same candidate set. Thus, we can use a similar method as Algorithm \ref{algo:optDV} to iterate over the candidate set of matching patterns 5-7.
 
-\cparagraph{Other discussions.}
+\cparagraph{A more efficient load balance scheme can be devised for subgraph searching.} For now, we first generate the maximum number of warps that can run concurrently on a GPU, and then utilize the round robin method to distribute all embeddings to all warps. A drawback of this method is that some warps may finish their work early and have to wait for other warps since the time spent on processing each embedding is different. To overcome this problem, a work stealing method can be used when a warp finish its work early.

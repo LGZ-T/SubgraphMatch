@@ -183,9 +183,9 @@ Load interval indexes of $elp$ into shared memory\;
 
 Algorithm \ref{algo:extphase} describes the overall workflow of the \SystemName extension phase. For each embedding (line 3), we first
 obtain the source VIDs from the embedding according to the matching pattern to be processed (line 4). Next, we search the source VIDs in
-the \SystemName interval-PCSR of the loaded ELP and extract their neighbors (line 5).  Then, we remove invalid neighbors that either have wrong
-vertex labels or do not satisfy the restrictions （lines 6-7）. Finally, we use different algorithms to generate new
-embeddings for different matching patterns (lines 8-15).
+the \SystemName interval-PCSR of the loaded ELP and extract their neighbors (line 5).  Then, we remove invalid neighbors that either have
+wrong vertex labels or do not satisfy the restrictions (lines 6-7). Finally, we use different algorithms to generate new embeddings for
+different matching patterns (lines 8-15).
 
 In the remainder of this section, we first describe embedding generation methods for the fundamental matching patterns 2-4 of Figure
 \ref{fig:matchpattern}. We then describe our optimized embedding generation method for the matching pattern 1 of Figure

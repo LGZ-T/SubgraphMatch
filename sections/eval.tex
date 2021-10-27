@@ -1,5 +1,76 @@
 \section{Experimental Results}
-Overall, our interval-PCSR reduces the space cost of hash-PCSR by 83\% on average and achieves an average speedup of $2.4\times$ over hash-PCSR when performing VID search. Moreover, \SystemName achieves an average speedup of $5\times$ over GSI for the task of subgraph search. Experimental results show that our approach can significantly improve the performance of subgraph search on GPUs.
+In this section, we first show that \SystemName improves the subgraph matching performance by $5\times$ over GSI (Section \FIXME{xx}). We
+then show that our interval-PCSR reduces the storage overhead by 83\% on average over the hash-PCSR format used by GSI while improving the
+processing time by $2.4\times$ for VID search (Section \FIXME{xx}). We then compare our parallel matching approach against the
+single-vertice matching scheme in Section \FIXME{xx}. \FIXME{Organise your results in this order.}
+
+
+\subsection{Overall Performance\label{sec:comparegsi}}
+\begin{figure*}
+\centering
+\includegraphics[width=\textwidth]{./figure/overperformance.eps}
+\caption{Execution times of \SystemName and GSI for searching nine query graphs on each of eight data graphs.}	
+\label{fig:overallperf}
+\end{figure*}
+
+\begin{figure}
+\centering
+\includegraphics[width=\columnwidth]{./figure/comparegsi.eps}
+\caption{The execution times of main procedures of \SystemName and GSI.}	
+\label{fig:compdvgsi}
+\end{figure}
+In this section, we present the overall performance of \SystemName and GSI on eight data graphs. For each data graph, we first use random
+walk to extract nine query graphs from it with vertex count ranging from 4 to 12, and then employ both methods on the data graph to match
+the generated nine queries. The runtime results are shown in Fig \ref{fig:overallperf}. GSI runs out of GPU memory in data graphs Orkut and
+sinaweibo.
+
+Our approach outperforms GSI in almost all test cases and achieves an average speedup of $5\times$. The maximum speedup of our approach
+over GSI can be up to $22.5\times$. As can be seen, GSI outperforms our approach in two test cases. The reasons can be explained as
+follows: (1) When matching $Q9$ in the data graph Enron, GSI finds 620K embeddings while \SystemName finds over 19M embeddings. GSI misses
+a vast number of embeddings, which makes it more faster than \SystemName; (2) When matching $Q12$ in the data graph FirstMM, GSI exits
+after matching three vertices because no embeddings can be matched, while \SystemName matches all vertices and edges of $Q12$ and finds one
+embedding. Therefore, \SystemName is slower than GSI in this test case.
+
+In Figure \ref{fig:overallperf}, the average speedup of \SystemName over GSI is $7\times$ for small queries ($Q4$-$Q7$), while it is
+$3\times$ for large queries ($Q8$-$Q12$). The reason behind this phenomenon is explained as follows. \SystemName can generate an initial
+extension phase with at least two vertices. Additionally, if there exist vertices that form one of matching patterns 1-4, our approach can
+generate an initial extension phase with three vertices. Therefore, only two or three extension phases are needed for small queries to
+complete the matching process. This saves a large number of global memory accesses, which significantly accelerate the matching process for
+small query graphs.
+
+To find out dominating factors for the superiority of \SystemName over GSI, we analyze detailed runtimes of each procedure of both methods.
+We employ \SystemName and GSI to match the query graph $Q4$ in the data graph Patents, and present the runtime of each step in Figure
+\ref{fig:compdvgsi}. We only show runtimes of procedures invoked when matching the first two query vertices, $u_0$ and $u_1$. The reasons
+are twofold: (1) In GSI, steps after matching $u_0$ and $u_1$ repeat steps 6-9 of Figure \ref{fig:compdvgsi}, and exhibit similar
+performance; (2) The runtimes of following steps are affected by the number of intermediate embeddings. Only when matching the first two
+vertices, we can make sure that both \SystemName and GSI process the same number embeddings.
+
+We show the runtimes of \SystemName and GSI in Figure \ref{fig:compdvgsi}, and reveal three root causes of inefficiency of GSI compared to
+\SystemName.
+\begin{itemize}
+  \item GSI utilizes a filter procedure to prune candidates for each query vertex. It takes 1.96 ms to complete, which is twice the
+      runtime of the matching procedure of \SystemName. Moreover, GSI needs to transfer the signature table to GPU before running the
+      filter procedure. The runtime of data transfer along takes up 68\% runtime of GSI. This is because the signature table uses 64
+      bytes for each vertex in the data graph to store neighbor information, which results in a large data structure. Compared to GSI,
+      \SystemName does not employ the filter procedure due to its inefficiencies in time and space.
+
+  \item Before the matching procedure, both methods need to transfer the edge label partition to GPU. However, the execution time of data
+      transfer in GSI is six times slower than \SystemName. The reason is explained as follows. GSI builds a hash-PCSR data structure for
+      each edge label partition and inserts 30 empty entries into hash indexes to reduce the number of collisions. Consequently,
+      hash-PCSR occupies a large portion of memory space, and thus takes a much longer time to be moved to GPU than the interval-PCSR of
+      \SystemName.
+
+  \item In the matching procedure, GSI invokes three GPU kernels to match the query vertex $u_1$, rearrange intermediate embeddings, and
+      match the edge between $u_0$ and $u_1$, respectively. The kernel invoked in step 9 consumes most of the runtime of the matching
+      procedure because it uses multiple time-consuming operations, such as thread block level synchronization and memory copy
+      operations, inside the GPU kernel to maintain load balance. The four-layer load balance scheme of GSI can reduce the load imbalance
+      greatly but also incur significant overhead. Different from GSI, our load balance scheme is simple yet effective. Only when there
+      is no embeddings left, load imbalance can occur.
+\end{itemize}
+
+In summary, our approach obtains superior performance over GSI which is the state-of-the-art subgraph matching approach on GPU.
+
+
 
 \subsection{Evaluation of Data Graph Formats}
 In this section, we first present the space cost of three data graph formats, including CSR, hash-PCSR, and  interval-PCSR, and then the searching time of hash-PCSR and interval-PCSR.
@@ -68,38 +139,6 @@ runs much faster without the modulo operation. However, variable divisor is nece
 In summary, our interval-PCSR not only reduces the space cost of hash-PCSR by replacing hash indexes with interval indexes, but also
 reduces the searching time by eliminating hash calculation.
 
-\subsection{Comparison of \SystemName and GSI\label{sec:comparegsi}}
-\begin{figure*}
-\centering
-\includegraphics[width=\textwidth]{./figure/overperformance.eps}
-\caption{Execution times of \SystemName and GSI for searching nine query graphs on each of eight data graphs.}	
-\label{fig:overallperf}
-\end{figure*}
-
-\begin{figure}
-\centering
-\includegraphics[width=\columnwidth]{./figure/comparegsi.eps}
-\caption{The execution times of main procedures of \SystemName and GSI.}	
-\label{fig:compdvgsi}
-\end{figure}
-In this section, we present the overall performance of \SystemName and GSI on eight data graphs. For each data graph, we first use random walk to extract nine query graphs from it with vertex count ranging from 4 to 12, and then employ both methods on the data graph to match the generated nine queries. The runtime results are shown in Fig \ref{fig:overallperf}. GSI runs out of GPU memory in data graphs Orkut and sinaweibo.
-
-Our approach outperforms GSI in almost all test cases and achieves an average speedup of $5\times$. The maximum speedup of our approach over GSI can be up to $22.5\times$. As can be seen, GSI outperforms our approach in two test cases. The reasons can be explained as follows: (1) When matching $Q9$ in the data graph Enron, GSI finds 620K embeddings while \SystemName finds over 19M embeddings. GSI misses a vast number of embeddings, which makes it more faster than \SystemName; (2) When matching $Q12$ in the data graph FirstMM, GSI exits after matching three vertices because no embeddings can be matched, while \SystemName matches all vertices and edges of $Q12$ and finds one embedding. Therefore, \SystemName is slower than GSI in this test case.
-
-In Figure \ref{fig:overallperf}, the average speedup of \SystemName over GSI is $7\times$ for small queries ($Q4$-$Q7$), while it is $3\times$ for large queries ($Q8$-$Q12$). The reason behind this phenomenon is explained as follows. \SystemName can generate an initial extension phase with at least two vertices. Additionally, if there exist vertices that form one of matching patterns 1-4, our approach can generate an initial extension phase with three vertices. Therefore, only two or three extension phases are needed for small queries to complete the matching process. This saves a large number of global memory accesses, which significantly accelerate the matching process for small query graphs.
-
-To find out dominating factors for the superiority of \SystemName over GSI, we analyze detailed runtimes of each procedure of both methods. We employ \SystemName and GSI to match the query graph $Q4$ in the data graph Patents, and present the runtime of each step in Figure \ref{fig:compdvgsi}. We only show runtimes of procedures invoked when matching the first two query vertices, $u_0$ and $u_1$. The reasons are twofold: (1) In GSI, steps after matching $u_0$ and $u_1$ repeat steps 6-9 of Figure \ref{fig:compdvgsi}, and exhibit similar performance; (2) The runtimes of following steps are affected by the number of intermediate embeddings. Only when matching the first two vertices, we can make sure that both \SystemName and GSI process the same number embeddings.
-
-We show the runtimes of \SystemName and GSI in Figure \ref{fig:compdvgsi}, and reveal three root causes of inefficiency of GSI compared to \SystemName.
-\begin{itemize}
-  \item GSI utilizes a filter procedure to prune candidates for each query vertex. It takes 1.96 ms to complete, which is twice the runtime of the matching procedure of \SystemName. Moreover, GSI needs to transfer the signature table to GPU before running the filter procedure. The runtime of data transfer along takes up 68\% runtime of GSI. This is because the signature table uses 64 bytes for each vertex in the data graph to store neighbor information, which results in a large data structure. Compared to GSI, \SystemName does not employ the filter procedure due to its inefficiencies in time and space.
-
-  \item Before the matching procedure, both methods need to transfer the edge label partition to GPU. However, the execution time of data transfer in GSI is six times slower than \SystemName. The reason is explained as follows. GSI builds a hash-PCSR data structure for each edge label partition and inserts 30 empty entries into hash indexes to reduce the number of collisions. Consequently, hash-PCSR occupies a large portion of memory space, and thus takes a much longer time to be moved to GPU than the interval-PCSR of \SystemName.
-
-  \item In the matching procedure, GSI invokes three GPU kernels to match the query vertex $u_1$, rearrange intermediate embeddings, and match the edge between $u_0$ and $u_1$, respectively. The kernel invoked in step 9 consumes most of the runtime of the matching procedure because it uses multiple time-consuming operations, such as thread block level synchronization and memory copy operations, inside the GPU kernel to maintain load balance. The four-layer load balance scheme of GSI can reduce the load imbalance greatly but also incur significant overhead. Different from GSI, our load balance scheme is simple yet effective. Only when there is no embeddings left, load imbalance can occur.
-\end{itemize}
-
-In summary, our approach obtains superior performance over GSI which is the state-of-the-art subgraph matching approach on GPU.
 
 \subsection{Comparison of \SystemName and SV-match} \label{sec:comparesv}
 \begin{figure*}

@@ -37,10 +37,11 @@ should be matched from the candidate sets and auxiliary data before performing t
 
 Some of the most recent works attempt to leverage the GPU computation power for fast graph matching
 \cite{lin2016network,guo2020gpu,tran2015fast,zeng2020gsi,guo2020exploiting}. GSI is the current state-of-the-art GPU-based graph matching
-algorithm \cite{zeng2020gsi}, delivering the best performance on some of the representative datasets. It has a dedicated graph storage
-format to reduce the memory footprint and improve the performance for graph vertex matching. While promising, existing approaches can
-only match one vertex from the query graph in one go. Such a strategy leads to extensive GPU memory accesses because they need to load and
-store the intermediate results for each vertex matching. These memory operations are expensive on GPUs with sizeable intermediate results.
+algorithm \cite{zeng2020gsi}, delivering the best performance on some of the representative datasets. It introduces a dedicated graph
+storage format to reduce the memory footprint and improve the performance for graph vertex matching. While promising, existing approaches
+can only match one vertex from the query graph in one go. Such a strategy leads to extensive GPU memory accesses because they need to load
+and store the intermediate results for each vertex matching. These memory operations are expensive on GPUs with sizeable intermediate
+results.
 
 
 

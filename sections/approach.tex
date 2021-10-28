@@ -48,7 +48,7 @@ which is then stored in the Compressed Sparse Row (CSR) sparse matrix storage fo
 the same edge label as the matching edge needs to be moved from the CPU memory into the GPU memory. PCSR makes some small modifications to
 the CSR format. As depicted in Figure \ref{fig:dataformat}a, a vertex ID (VID) can be used to find the row offset of a vertex because VIDs are stored
 as contiguous elements in a classical CSR. Because after grouping edges into partitions, VIDs of vertices are no longer guaranteed to be
-continuous in the storage space, GSI employs a hash function to translate a VID into a slot the corresponding elements in the edge partition structure. To reduce collisions of the hash function, some empty entries have to be reserved
+continuous in the storage space, GSI employs a hash function to translate a VID into a slot the corresponding elements in the edge partition structure, which we call hash-PCSR. To reduce collisions of the hash function, some empty entries have to be reserved
 for each vertex (30 in GSI), which results in a large portion of unused GPU memory space. \SystemName is designed to avoid this pitfall.
 
 
@@ -97,7 +97,7 @@ interval indices. This is not ideal because having a large number of interval in
 the interval for a VID. For example, if we want to find the index of VID 7 in Figure \ref{fig:dataformat}c, with a naïve interval scheme,
 we will have to compare number 7 against the first three interval indices before locating VID 7 in the third interval index. Our design
 avoids this pitfall by carefully mapping the original VIDs to new VIDs, to allow one to generate more contiguous new VIDs in each edge
-label partition, which in turn leads to a smaller number of intervals. Our data storage format shares the same spirit of Huffman coding \cite{Moffat2019Huffman} – we want to reduce the number of memory access when processing the largest ELP (i.e., the partition that contains the largest number of VIDs).
+label partition, which in turn leads to a smaller number of intervals. We call the storage format of \SystemName interval-PCSR. Our data storage format shares the same spirit of Huffman coding \cite{Moffat2019Huffman} – we want to reduce the number of memory access when processing the largest ELP (i.e., the partition that contains the largest number of VIDs).
 
 \subsection{\SystemName Storage Format Algorithm}
 

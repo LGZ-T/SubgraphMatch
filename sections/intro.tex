@@ -25,22 +25,22 @@
 %operations inside the GPU kernel to calculate right positions for intermediate results. Therefore, we do not need extra GPU kernels.
 
 Subgraph matching is a fundamental task of graph analysis. It requires finding all subgraphs from a data graph $G$ that are isomorphic to a
-query graph $q$. This technique has a wide range of applications, including social network analysis \FIXME{\cite{}}, and chemical compound
-search \FIXME{\cite{}}.
+query graph $q$. This technique has a wide range of applications, including social network analysis \cite{wang2012truss,kairam2012The}, and chemical compound
+search \cite{wooyoung2011Biological}.
 
-Subgraph matching is an NP-complete problem \FIXME{\cite{}}, requiring significant computation time when processing large, real-life
+Subgraph matching is an NP-complete problem \cite{garey1979Computers}, requiring significant computation time when processing large, real-life
 graphs. A wide range of approaches have been proposed to speed up subgraph search
 \cite{bhattarai2019ceci,guo2020gpu,tran2015fast,shi2020graphpi,bi2016efficient,zeng2020gsi,sun2020subgraph,guo2020exploiting,sun2020rapidmatch,lin2016network}.
-These approaches a typical 3-step process for subgraph matching. From the vertices in the query graph $q$, this process first builds
-candidate sets and auxiliary data from the data graph $G$. It then determines a matching order that determines how each query vertice
+These approaches adopt a typical 3-step process for subgraph matching. For the vertices in the query graph $q$, this process first builds
+candidate sets and auxiliary data from the data graph $G$. It then determines a matching order that determines how each query vertex
 should be matched from the candidate sets and auxiliary data before performing the graph matching by following the matching order.
 
 Some of the most recent works attempt to leverage the GPU computation power for fast graph matching
 \cite{lin2016network,guo2020gpu,tran2015fast,zeng2020gsi,guo2020exploiting}. GSI is the current state-of-the-art GPU-based graph matching
 algorithm \cite{zeng2020gsi}, delivering the best performance on some of the representative datasets. It has a dedicated graph storage
-format to reduce the memory footprint and improve the performance for graph vertice matching. While promising, exisiting approaches can
-only match one vertice from the query graph in one go. Such a strategy leads to extensive GPU memory accesses because they need to load and
-store the intermediate results for each vertice matching. These memory operations are expensive on GPUs with sizeable intermediate results.
+format to reduce the memory footprint and improve the performance for graph vertex matching. While promising, existing approaches can
+only match one vertex from the query graph in one go. Such a strategy leads to extensive GPU memory accesses because they need to load and
+store the intermediate results for each vertex matching. These memory operations are expensive on GPUs with sizeable intermediate results.
 
 
 
@@ -65,11 +65,11 @@ To overcome limitations of \cite{lai2015scalable}, we propose an approach that p
 \label{fig:matchpattern}
 \end{figure}
 
- We validate our approach from three aspects: (1) Experimental results show that our interval-PCSR significantly reduces the space cost and searching time of hash-PCSR by 83\% and 58\% respectively; (2) We obtain an average speedup of $5\times$ over GSI for subgraph search; (3) Compared to the single vertex matching , which is modified based on our parallel vertex matching, our approach reduces the search time by 15.9\% on average.
+ We validate our approach from three aspects: (1) We obtain an average speedup of $5\times$ over GSI for subgraph search; (2) Experimental results show that our enhanced storage format significantly reduces the space cost and searching time of the storage format of GSI by 83\% and 58\% respectively; (3) Compared to the single vertex matching , which is modified based on our parallel vertex matching, our approach reduces the search time by 15.9\% on average.
 
  To summarize, we make the following contributions:
  \begin{itemize}
-  \item We propose an interval-PCSR format and a mapping algorithm that can generate more contiguous VIDs in each edge label partition. Our interval-PCSR significantly reduces the space cost and searching time of hash-PCSR of GSI.
-  \item We propose a parallel vertex matching method that can match as many query vertices as possible to reduce the number of read and write operations of intermediate results.
-  \item We propose a new matching order generation algorithm and a new parallel write scheme to accommodate \SystemName.
+    \item We propose a parallel vertex matching method that can match as many query vertices as possible to reduce the number of read and write operations of intermediate results.
+    \item We propose an enhanced storage format and a vertex ID mapping algorithm, which significantly reduces the space cost and searching time of the storage format of GSI.
+    \item We propose a new matching order generation algorithm and a new parallel write scheme to accommodate \SystemName.
 \end{itemize}

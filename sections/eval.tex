@@ -1,8 +1,8 @@
 \section{Experimental Results}
-In this section, we first show that \SystemName improves the subgraph matching performance by $5\times$ over GSI (Section \FIXME{xx}). We
+In this section, we first show that \SystemName improves the subgraph matching performance by $5\times$ over GSI (Section \ref{sec:comparegsi}). We
 then show that our interval-PCSR reduces the storage overhead by 83\% on average over the hash-PCSR format used by GSI while improving the
-processing time by $2.4\times$ for VID search (Section \FIXME{xx}). We then compare our parallel matching approach against the
-single-vertice matching scheme in Section \FIXME{xx}. \FIXME{Organise your results in this order.}
+processing time by $2.4\times$ for VID search (Section \ref{sec:evalgraphformat}). We then compare our parallel matching approach against the
+single-vertice matching scheme in Section \ref{sec:comparesv}.
 
 
 \subsection{Overall Performance\label{sec:comparegsi}}
@@ -72,7 +72,7 @@ In summary, our approach obtains superior performance over GSI which is the stat
 
 
 
-\subsection{Evaluation of Data Graph Formats}
+\subsection{Evaluation of Data Graph Formats\label{sec:evalgraphformat}}
 In this section, we first present the space cost of three data graph formats, including CSR, hash-PCSR, and  interval-PCSR, and then the searching time of hash-PCSR and interval-PCSR.
 
 The results of space cost are shown in Table \ref{tab:graphsize}. We can see from Table \ref{tab:graphsize} that CSR has the smallest space among three data graph formats. The reason is that all VIDs in CSR are contiguous and unique, while VIDs in PCSR are non-contiguous and many duplicate VIDs exist in different edge label partitions. However, we need to transfer the whole CSR format graph to GPU in order to perform subgraph search, which is space and time consuming. In contrast, our interval-PCSR achieves similar space cost as CSR but only needs to transfer one edge label partition to GPU before each iteration of subgraph search. AS shown in Table \ref{tab:graphsize}, the size of the maximum edge label partition in interval-PCSR (denoted as \emph{Max}) is greatly smaller than CSR, which makes data transfer in our approach more efficient.
@@ -140,7 +140,7 @@ In summary, our interval-PCSR not only reduces the space cost of hash-PCSR by re
 reduces the searching time by eliminating hash calculation.
 
 
-\subsection{Comparison of \SystemName and SV-match} \label{sec:comparesv}
+\subsection{Comparison of \SystemName and SV-match\label{sec:comparesv}} 
 \begin{figure*}
 \centering
 \includegraphics[width=\textwidth]{./figure/compareSV.eps}

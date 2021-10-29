@@ -45,30 +45,30 @@ are twofold: (1) In GSI, steps after matching $u_0$ and $u_1$ repeat steps 6-9 o
 performance; (2) The runtimes of following steps are affected by the number of intermediate embeddings. Only when matching the first two
 vertices, we can make sure that both \SystemName and GSI process the same number embeddings.
 
-We show the runtimes of \SystemName and GSI in Figure \ref{fig:compdvgsi}, and reveal three root causes of inefficiency of GSI compared to
-\SystemName.
-\begin{itemize}
-  \item GSI utilizes a filter procedure to prune candidates for each query vertex. It takes 1.96 ms to complete, which is twice the
+We show the runtimes  \SystemName and GSI in Figure \ref{fig:compdvgsi}, and reveal three root causes of inefficiency of GSI compared to
+\SystemName. GSI utilizes a filter procedure to prune candidates for each query vertex. It takes twice of the
       runtime of the matching procedure of \SystemName. Moreover, GSI needs to transfer the signature table to GPU before running the
       filter procedure. The runtime of data transfer along takes up 68\% runtime of GSI. This is because the signature table uses 64
       bytes for each vertex in the data graph to store neighbor information, which results in a large data structure. Compared to GSI,
       \SystemName does not employ the filter procedure due to its inefficiencies in time and space.
 
-  \item Before the matching procedure, both methods need to transfer the edge label partition to GPU. However, the execution time of data
-      transfer in GSI is six times slower than \SystemName. The reason is explained as follows. GSI builds a hash-PCSR data structure for
+
+Before the matching procedure, both methods need to transfer the edge label partition to GPU. However, the execution time of data
+      transfer in GSI is 6x times slower than \SystemName. The reason is explained as follows. GSI builds a hash-PCSR data structure for
       each edge label partition and inserts 30 empty entries into hash indexes to reduce the number of collisions. Consequently,
       hash-PCSR occupies a large portion of memory space, and thus takes a much longer time to be moved to GPU than the interval-PCSR of
       \SystemName.
 
-  \item In the matching procedure, GSI invokes three GPU kernels to match the query vertex $u_1$, rearrange intermediate embeddings, and
+In the matching procedure, GSI invokes three GPU kernels to match the query vertex $u_1$, rearrange intermediate embeddings, and
       match the edge between $u_0$ and $u_1$, respectively. The kernel invoked in step 9 consumes most of the runtime of the matching
       procedure because it uses multiple time-consuming operations, such as thread block level synchronization and memory copy
       operations, inside the GPU kernel to maintain load balance. The four-layer load balance scheme of GSI can reduce the load imbalance
       greatly but also incur significant overhead. Different from GSI, our load balance scheme is simple yet effective. Only when there
-      is no embeddings left, load imbalance can occur.
-\end{itemize}
+      is no embeddings left, load imbalance can occur. Overall, \SystemName significantly outperforms GSI. 
 
-In summary, our approach obtains superior performance over GSI which is the state-of-the-art subgraph matching approach on GPU.
+
+
+
 
 
 
@@ -140,7 +140,7 @@ In summary, our interval-PCSR not only reduces the space cost of hash-PCSR by re
 reduces the searching time by eliminating hash calculation.
 
 
-\subsection{Comparison of \SystemName and SV-match\label{sec:comparesv}} 
+\subsection{Comparison of \SystemName and SV-match\label{sec:comparesv}}
 \begin{figure*}
 \centering
 \includegraphics[width=\textwidth]{./figure/compareSV.eps}

@@ -1,3 +1,9 @@
 
 \section{Conclusions}
-In this work, we propose a parallel vertex matching method to match query graphs in a labeled undirected data graph. Also, we improve the performance of hash-PCSR by replacing its hash indexes with interval indexes. Experiments show that our approach consistently outperforms GSI, which is the state-of-the-art subgraph search method on GPU, in all tested data graphs. We also validate the effectiveness of parallel vertex matching method by comparing it to the single vertex matching method.
+We have presented \SystemName, a GPU-based parallel vertex matching scheme for performing subgraph search in a labeled undirected data
+graph. \SystemName is designed to match multiple vertices within a single GPU kernel to reduce the GPU memory accesses. It implements a new
+vertex storage format to reduce the memory footprint and vertex search time. We evaluate \SystemName by applying it to eight real-life
+graph datasets on an NVIDIDA 2080Ti GPU. We compare \SystemName against GSI, the state-of-the-art GPU-based subgraph search framework.
+Experimental results show that \SystemName consistently and significantly outperforms GSI on all test datasets. We also show that our
+parallel vertex matching scheme delivers better performance than a variant that implements a single-vertex matching scheme but with our
+enhanced storage format.

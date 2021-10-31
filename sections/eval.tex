@@ -8,14 +8,14 @@ single-vertice matching scheme in Section \ref{sec:comparesv}.
 \subsection{Overall Performance\label{sec:comparegsi}}
 \begin{figure*}
 \centering
-\includegraphics[width=\textwidth]{./figure/overperformance.eps}
+\includegraphics[width=0.9\textwidth]{./figure/overperformance.eps}
 \caption{Execution times of \SystemName and GSI for searching nine query graphs on each of eight data graphs.}	
 \label{fig:overallperf}
 \end{figure*}
 
 \begin{figure}
 \centering
-\includegraphics[width=\columnwidth]{./figure/comparegsi.eps}
+\includegraphics[width=0.9\columnwidth]{./figure/comparegsi.eps}
 \caption{The execution times of main procedures of \SystemName and GSI.}	
 \label{fig:compdvgsi}
 \end{figure}
@@ -64,7 +64,7 @@ In the matching procedure, GSI invokes three GPU kernels to match the query vert
       procedure because it uses multiple time-consuming operations, such as thread block level synchronization and memory copy
       operations, inside the GPU kernel to maintain load balance. The four-layer load balance scheme of GSI can reduce the load imbalance
       greatly but also incur significant overhead. Different from GSI, our load balance scheme is simple yet effective. Only when there
-      is no embeddings left, load imbalance can occur. Overall, \SystemName significantly outperforms GSI. 
+      is no embeddings left, load imbalance can occur. Overall, \SystemName significantly outperforms GSI.
 
 
 
@@ -121,7 +121,7 @@ kernels, which enables us to avoid interference such as warp scheduling. To ensu
 data graph in each edge label partition and record the searching time. The results are shown in Figure \ref{fig:searchtime}.
 \begin{figure}
 \centering
-\includegraphics[width=\columnwidth]{./figure/accesstime.eps}
+\includegraphics[width=0.9\columnwidth]{./figure/accesstime.eps}
 \caption{The searching time of interval- and hash-PCSR on all data graphs.}	
 \label{fig:searchtime}
 \end{figure}
@@ -143,7 +143,7 @@ reduces the searching time by eliminating hash calculation.
 \subsection{Comparison of \SystemName and SV-match\label{sec:comparesv}}
 \begin{figure*}
 \centering
-\includegraphics[width=\textwidth]{./figure/compareSV.eps}
+\includegraphics[width=0.9\textwidth]{./figure/compareSV.eps}
 \caption{Execution times of \SystemName and SV-match for different number of extension phases that contain matching patterns 1-7.}	
 \label{fig:compareSV}
 \end{figure*}

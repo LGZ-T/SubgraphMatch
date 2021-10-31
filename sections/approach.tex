@@ -23,6 +23,7 @@ optimized interval-PCSR (d). Note that VIDs in dashed squares do not need to be 
 
 
 \begin{algorithm}[t!]
+\small
 \KwIn{the data graph in our format $G$, the query graph $q$}
 \KwOut{Embeddings of $q$ $EMB$}
 $\pi \leftarrow \textsc{GenMatchOrder}(q)$\;
@@ -43,7 +44,7 @@ $newEMB$\; $\textsc{ExtKernel}(elp,NULL,newEMB,\pi[0])$\; $EMB \leftarrow newEMB
 Real-world graphs are often too large to fit into the memory of a single GPU. Therefore, only part of the data that is needed for the
 current computation should be stored in the GPU memory at a given time. As a result, it is important to find a compact representation of
 the graph data without compromising the computation performance. To this end, \SystemName extends the Partitioned Compressed Sparse Row
-(PCSR), the data graph storage format used by GSI \cite{zeng2020gsi}. This format groups edge with the same label into an edge label partition,
+(PCSR), the data graph storage format used by GSI \cite{zeng2020gsi}. This format groups edges with the same label into an edge label partition,
 which is then stored in the Compressed Sparse Row (CSR) sparse matrix storage format. By doing so, only the partition with
 the same edge label as the matching edge needs to be moved from the CPU memory into the GPU memory. PCSR makes some small modifications to
 the CSR format. As depicted in Figure \ref{fig:dataformat}a, a vertex ID (VID) can be used to find the row offset of a vertex because VIDs are stored
@@ -55,6 +56,7 @@ for each vertex (30 in GSI), which results in a large portion of unused GPU memo
 \subsection{\SystemName Data Graph Storage Format}
 
 \begin{algorithm}[t!]
+\small
 \KwIn{the set of all edge label partitions $ELP$}
 \KwOut{the mapping array $MAP$ with old and new VIDs are indices and values respectively}	
 $newVID \leftarrow 1$\;
@@ -113,8 +115,8 @@ and follow the largest VID from the last processed subpartition.
 
 \cparagraph{Step 3: Process subpartitions.} To determine the order of the subpartitions of an ELP to be processed, we start from the
 subpartition that is shared by most ELPs (line 8).  This means for the example shown in Figure \ref{fig:dataformat}d \textbf{\textcircled{1}}, we would first process
-$subpart 0$, because it has the largest share set (with 3 ELPs).  The next subpartition we choose will be the one that has the largest number of common ELPs between its share set and the shared set of the last chosen subpartition (line 13). Looking at Figure \ref{fig:dataformat}d \textbf{\textcircled{1}} again, $subPart 1$ will be the secondly chosen subpartition because its shared set has two ELPs ($0, 1$) with the share set of $subPart 0$ (the firstly chosen subpartition). We choose this strategy because of the following two reasons.
-First, the larger number of elements in common in the shared sets of two subpartitions, the more ELPs will have the two subpartitions.
+$subpart 0$, because it has the largest share set (with 3 ELPs).  The next subpartition we choose will be the one that has the largest number of common ELPs between its share set and the share set of the last chosen subpartition (line 13). Looking at Figure \ref{fig:dataformat}d \textbf{\textcircled{1}} again, $subPart 1$ will be the secondly chosen subpartition because its share set has two ELPs ($0, 1$) with the share set of $subPart 0$ (the firstly chosen subpartition). We choose this strategy because of the following two reasons.
+First, the larger number of elements in common in the share sets of two subpartitions, the more ELPs will have the two subpartitions.
 Secondly, because we ensure the VIDs between two consecutively processed subpartitions are continuous, we can then merge the VIDs of the
 two subpartitions to form a contiguous interval to be stored in a single interval index. Using this strategy, we can use a single interval index to record the new VIDs of $subPart$ 0 and 1 in Figure \ref{fig:dataformat}d \textbf{\textcircled{2}}. For each selected subpartition, we assign new contiguous VIDs to old VIDs in the selected subpartition (lines 9-10, 15-17).
 
@@ -153,6 +155,7 @@ associated with \texttt{atomicAdd}, we found that this is not a severe problem i
 intrinsic irregularity of graph structures.
 
 \begin{algorithm}[t]
+\small
 \KwIn{the edge label partition $elp$, partial embeddings $EMB$, the extension phase
 $extP$, the starting address of new embeddings $newEMB$}
 $totNum \leftarrow 0$\;
@@ -198,6 +201,7 @@ choosing which of the candidate matching patterns to use for subgraph matching.
 For matching patterns 2-4, we employ a simple method described in Algorithm \ref{algo:generalDV} to generate new embeddings. Our key idea is to iterate over all combinations of candidates of $u_{1}$ and $u_{2}$ in the data graph (denoted as $C_1$ and $C_2$ respectively) to construct new embeddings by appending each valid combination to a new copy of the current embedding $emb$. We consider a combination to be valid if none of the VIDs in the combination is presented in the current $emb$. To avoid checking this condition repeatedly, we first check this condition for all vertices in $C_2$ once (lines 3-4) and record indexes of vertices whose VIDs also exist in $emb$ (line 5). To fully utilize $C_2$, we generate new embeddings while checking the condition. Once a vertex in $C_2$ is checked to be valid (lines 6-7), we assign this vertex and the first valid vertex in $C_1$ to $u_2$ and $u_1$, respectively (lines 1,8). Then, we store the new embedding $(emb,u_1,u_2)$ to the corresponding address (lines 9-10).
 
 \begin{algorithm}[t!]
+\small
 	\KwIn{the partial embedding $emb$, candidates of $u_1$ $C_1$, candidates of $u_2$ $C_2$, the number of newly written embeddings $totNum$, the starting address of new embeddings $newEMB$}
 	Find the index $i$ of the first valid vertex in $C_1$\;
 	$writePos \leftarrow atomicAdd(totNum,1 \times C_{2}.size)$\;
@@ -252,13 +256,14 @@ $u_1$ and $u_2$ (line 20). Finally, we store the new embedding to the specified 
 \subsection{Matching Pattern 1}
 \begin{figure} [t]
 \centering
-\includegraphics[width=\columnwidth]{./figure/ep1opt.eps}
+\includegraphics[width=0.8\columnwidth]{./figure/ep1opt.eps}
 \caption{An example of generating new embeddings for matching pattern 1.}	
 \label{fig:ep1opt}
 \end{figure}
 
 
 \begin{algorithm}[t]
+\small
 	\KwIn{embeddings $emb$, candidates $C$, the number of newly written embeddings $totNum$, the starting address of new embeddings $newEMB$}
 	$writePos \leftarrow atomicAdd(totNum,C.size \times (C.size-1))$\;
 	\For{$i \leftarrow 0$ \KwTo $C.size-1$}{
@@ -288,6 +293,7 @@ generate a combination, we can reverse the combination to obtain another combina
 
 \subsection{Matching Patterns 5 to 7}
 \begin{algorithm}[t!]
+\small
 	\KwIn{embeddings $emb$, candidates of \{$u_1, \cdots, u_n$\} $C_1$, candidates of \{$u_{n+1}, \cdots, u_{n+m}$\} $C_2$, the number of newly written embeddings $totNum$, the starting address of new embeddings $newEMB$, extension phase $extP$}
 	\If{$extP$ is matching pattern 5}{
 		\ForEach{$comb1$ of combinations of $u_1, \cdots, u_{n-2}$}{
@@ -307,7 +313,7 @@ generate a combination, we can reverse the combination to obtain another combina
 	\label{algo:nvext}
 \end{algorithm}
 
-Our approach for generate embeddings for matching patterns 5-7 is described in Algorithm \ref{algo:nvext}. This algorithm extends Algorithm
+Our approach for generating embeddings of matching patterns 5-7 is described in Algorithm \ref{algo:nvext}. This algorithm extends Algorithm
 \ref{algo:optDV}. For matching pattern 5 (line 1), we iterate over all combinations of $u_1, \cdots, u_{n-2}$ (line 2) and use Algorithm
 \ref{algo:optDV} to match the last two query vertices $u_{n-1}$ and $u_n$ (line 4). Before invoking Algorithm \ref{algo:optDV}, we need to
 construct a new embedding and new candidates for $u_{n-1}$ and $u_n$ (line 3). For matching patterns 6 and 7, we first use an outer loop to
@@ -323,13 +329,13 @@ matching patterns 5-7 get the highest priority, 1-4 get the medium priority, and
 prioritize matching patterns that posses the same first level priority based on efficiency of each matching pattern when generating
 embeddings.
 
-We first analyze the efficiency of medium priority matching patterns, and then the highest priority ones. The matching pattern 1 uses an optimized method (Algorithm \ref{algo:optDV}) to generate embeddings, thus it is most efficient among matching patterns 1-4. matching patterns 2-4 use the normal method (Algorithm \ref{algo:generalDV}) but the matching pattern 2 needs to evaluate the equality of candidates of $u_1$ and $u_2$. Therefore, the matching pattern 2 is the least efficient one. Compared to the matching pattern 3, the matching pattern 4 needs one more step to find the address of $u_{s2}$, thus it is less efficient than the matching pattern 3. Consequently, the priority order of matching patterns 1-4 from the highest to the lowest is matching pattern 1, 3, 4, and 2.
+We first analyze the efficiency of medium priority matching patterns, and then the highest priority ones. The matching pattern 1 uses an optimized method (Algorithm \ref{algo:optDV}) to generate embeddings, thus it is most efficient among matching patterns 1-4. Matching patterns 2-4 use the normal method (Algorithm \ref{algo:generalDV}) but the matching pattern 2 needs to evaluate the equality of candidates of $u_1$ and $u_2$. Therefore, the matching pattern 2 is the least efficient one. Compared to the matching pattern 3, the matching pattern 4 needs one more step to find the address of $u_{s2}$, thus it is less efficient than the matching pattern 3. Consequently, the priority order of matching patterns 1-4 from the highest to the lowest is matching pattern 1, 3, 4, and 2.
 
 Among matching patterns of the highest priority, the matching pattern 5 is the most efficient one because it only needs one step to find the neighbor address of $u_{s1}$ in the edge label partition and another step to find the address of neighbors that have the same vertex label as $u_1, \cdots, u_n$. In contrast, the matching pattern 7 is the least efficient one because it needs one more step to find the neighbor address of $u_{s2}$ compared to the matching pattern 5. Consequently, the priority order of matching patterns 5-7 from the highest to the lowest is matching pattern 5, 6, and 7.
 
 
 \subsection{The Elimination Phase\label{sec:eliphase}}
-In the elimination stage, \SystemName removes illegible embeddings that do not match the specified non-tree query edges. As shown in Figure \ref{fig:overview}\textbf{\textcircled{2}}, the embedding $(v_1, v_4, v_0)$ is removed because there is no edge between $v_4$ and $v_0$ that can match the query edge $(u_0, u_1)$.
+In the elimination stage, \SystemName removes illegible embeddings that do not match the specified non-tree query edges. As shown in Figure \ref{fig:overview} \textbf{\textcircled{2}}, the embedding $(v_1, v_4, v_0)$ is removed because there is no edge between $v_4$ and $v_0$ that can match the query edge $(u_0, u_1)$.
 
 GSI \cite{zeng2020gsi} matches only one query edge in a GPU kernel and Lai et al. \cite{lai2015scalable} matches at most two query edges at
 each iteration. Both methods can not fully utilize the elimination power of non-tree edges. In our approach, we match as many non-tree
@@ -339,6 +345,7 @@ the eliminate phase. For each embedding $emb$ (line 2), we first check if all qu
 
 
 \begin{algorithm}[t!]
+\small
 \KwIn{the edge label partition $elp$, embeddings $EMB$, the number of generted embeddings $totNum$, the elimination phase $eliPhase$}
 Load interval indexes of $elp$ into shared memory\;
 \ForEach{$emb \in EMB$}{
@@ -371,8 +378,8 @@ Based on \cite{bi2016efficient} and our parallel vertex matching method, we desi
 To match the core structure, we first find the smallest circle in the core structure (line 3), and then select vertices in the circle that
 conform to the highest priority matching pattern among matching patterns 0, 1, and 3 (line 4). The selected vertices constitute the first
 extension phase (lines 5-6), which is a special kind of extension phase. Different from the normal extension phase that fetches source
-vertices from embeddings (Figure \ref{fig:overview}\textbf{\textcircled{3}}), the first extension phase fetches the source vertex from the
-edge label partition (Figure \ref{fig:overview}\textbf{\textcircled{1}}). After generating the initial phase, we iteratively find vertices
+vertices from embeddings (Figure \ref{fig:overview} \textbf{\textcircled{3}}), the first extension phase fetches the source vertex from the
+edge label partition (Figure \ref{fig:overview} \textbf{\textcircled{1}}). After generating the initial phase, we iteratively find vertices
 in the circle that conform to matching patterns 0-4 and choose the one with the highest priority (lines 7-9). Finally, we use the non-tree
 edge in the circle to construct an elimination phase (line 10).
 
@@ -382,6 +389,7 @@ After matching the core structure, we can use any appropriate matching patterns 
 
 
 \begin{algorithm}
+\small
 	\KwIn{the query graph $q$}
 	\KwOut{the match phase queue $matchPhase$}
 	Generate restrictions to eliminate automorphisms\;

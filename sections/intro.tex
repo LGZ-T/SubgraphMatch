@@ -26,7 +26,7 @@
 
 Subgraph matching is a fundamental task of graph analysis. It requires finding all subgraphs from a data graph $G$ that are isomorphic to a
 query graph $q$. Subgraph matching requires finding all the isomorphic subgraphs (known as graph embeddings) from the data graph $G$ by
-ensuring both the vertices and the edge labels of the extract subgraph maths the vertices and edge label of the query graph $q$. This
+ensuring both the vertex and the edge labels of the extract subgraph matches the vertex and edge labels of the query graph $q$. This
 technique has a wide range of applications, including social network analysis \cite{wang2012truss,kairam2012The}, and chemical compound
 search \cite{wooyoung2011Biological}.
 
@@ -60,12 +60,12 @@ corresponding results in one GPU kernel. Unlike prior work \cite{lai2015scalable
 patterns (Figure \ref{fig:matchpattern}). It uses one single GPU kernel to match multiple edges in a single GPU kernel simultaneously. By
 matching multiple vertices and edges in a single GPU kernel, our approach eliminates the expensive GPU global memory addresses. \SystemName
 provides new optimizing algorithms to generate the vertex matching order and process the commonly used matching pattern. \SystemName also
-introduces a new graph structure storage format, which gives significant benefits for graph data storage overhead and processing time over
+introduces a new graph storage format, which gives significant benefits for graph data storage overhead and processing time over
 GSI.
 
-We evaluate \SystemName by applying it to eight real-world data graphs on an NVIDIA 2080ti GPU. We compare \SystemName against GSI, the
+We evaluate \SystemName by applying it to eight real-world data graphs on an NVIDIA 2080Ti GPU. We compare \SystemName against GSI, the
 state-of-the-art GPU-based subgraph matching framework. Experimental results show that \SystemName reduces the processing time by $5\times$
-on average over GSI. It uses 83\% less memory for graph data storage and improves the vertex search time by 58%.
+on average over GSI. It uses 83\% less memory for graph data storage and improves the vertex search time by 58\%.
 
 
 
